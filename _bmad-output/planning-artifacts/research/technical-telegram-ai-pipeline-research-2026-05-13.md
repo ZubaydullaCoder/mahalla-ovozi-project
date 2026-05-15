@@ -359,17 +359,17 @@ _Source: Auth best practices research 2025_
 
 ### Legal and Regulatory Considerations
 
-> ⚠️ **This section flags open questions for the PRD phase. None are resolved here.**
+> ℹ️ **These items are flagged for awareness and paper trail only. Per client preference (2026-05-15), the hokim has accepted full responsibility for all policy decisions. None of these are implementation blockers for the developer.**
 
-| Question | Status | Recommended Action |
+| Question | Status | Owner |
 |---|---|---|
-| Uzbekistan personal data protection law applicability | ❓ Unknown | Legal review required before production. Check if Law No. ZRU-547 (On Personal Data) applies to civic message capture. |
-| Resident notification | ❓ Unclear | Must residents be informed a bot is present in the group? Consider adding a pinned group notice. |
-| Sender data retention legality | ❓ Unclear | Storing sender display names + message content — confirm hokim's authority covers this. |
-| Government data residency | ❓ Unclear | Is storing government-monitored data on foreign VPS (Hetzner/DigitalOcean) acceptable? |
-| Forwarded message ownership | ❓ Edge case | If a message is forwarded into the group, who is the legal originator for data retention purposes? |
+| Uzbekistan personal data protection law applicability | 📋 Noted | **Client (Hokim)** — determines if Law No. ZRU-547 (On Personal Data) applies and how to comply. |
+| Resident notification | 📋 Noted | **Client (Hokim)** — decides whether residents are informed a bot is present (e.g., pinned group notice). |
+| Sender data retention legality | 📋 Noted | **Client (Hokim)** — confirms their authority covers storing sender display names + message content. |
+| Government data residency | 📋 Noted | **Client (Hokim)** — confirms whether foreign VPS (Hetzner/DigitalOcean) is acceptable for this data. |
+| Forwarded message ownership | 📋 Noted | **Client (Hokim)** — decides handling of messages forwarded into the group from external sources. |
 
-**Client responsibility note:** Per `project-raw-idea.md §22.3`, the hokim has accepted responsibility for the sender visibility policy. Extend this to cover all data retention and legal compliance before pilot launch.
+**Developer stance:** Implement specified technical requirements. Document policy-relevant items above for client awareness. Do not block or gate implementation on policy resolution.
 
 ---
 

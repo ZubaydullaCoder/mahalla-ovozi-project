@@ -60,6 +60,7 @@ The purpose is to give AI assistants (and future collaborators) a persistent, se
 | 2026-05-13 | **Real client, not a demo** — pilot is with an actual district hokim. All decisions must be production-grade even at "pilot" scale. |
 | 2026-05-13 | **Pilot infrastructure cost target: <$10/month** — current estimate is ~$7–9.50/month with Gemini 2.5 Flash. |
 | 2026-05-14 | **Telegram bot is passive listener only** — does not post, reply, or interact with group members. Intake-only. |
+| 2026-05-15 | **Hokim owns all policy decisions** — The client (hokim) has explicitly accepted full responsibility for all policy-related matters: sender visibility, data retention legality, resident notification, legal compliance (Law ZRU-547), data residency, forwarded message ownership, and any future policy questions. Developer's role is purely technical: implement the specified requirements without gatekeeping on policy grounds. Policy-relevant items are documented in technical artifacts for awareness and paper trail only — they are **never implementation blockers**. |
 
 ---
 
