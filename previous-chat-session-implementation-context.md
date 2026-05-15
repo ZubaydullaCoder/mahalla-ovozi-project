@@ -1,6 +1,6 @@
 # Previous Chat Session Context
 
-> **Purpose:** This file is updated at the end of each working session. It gives the AI assistant in the next session immediate, accurate context about current project state — what was done, what was decided, and what comes next. Read this before starting any new work on Mahalla Ovozi.
+> **Purpose:** This file is updated at the end of each working session. It gives the AI assistant in the next session immediate, accurate context about current project state — what was done and what was decided. Read this before starting any new work on Mahalla Ovozi.
 
 ---
 
@@ -89,45 +89,33 @@ Three commits on `main`:
 | Technical Research | ✅ Complete, reviewed, updated, committed |
 | Domain Research | ✅ Complete, committed |
 | User-Client Preferences Log | ✅ Initialized, committed |
-| PRD | ❌ Not started — **next immediate step** |
+| PRD | ❌ Not started |
 | UX Design | ❌ Not started |
 | Architecture Document | ❌ Not started |
 | Epics & Stories | ❌ Not started |
 
 ---
 
-### Confirmed Technical Decisions (Do Not Re-debate)
+### Current Technical Decisions
+
+> Research-grounded decisions are technically stable. Rows marked **⚙️** are preference-based — check `user-client-preferences-log.md` for the latest, as they may be updated.
 
 | Decision | Value |
 |---|---|
 | Architecture | Modular Monolith |
 | Bot framework | grammY (Node.js/TypeScript) + webhooks |
 | Queue | Redis + BullMQ (20-min repeatable job) |
-| AI Classifier | Google Gemini 2.5 Flash, `thinkingBudget: 0`, `temperature: 0` |
+| AI Classifier ⚙️ | Google Gemini 2.5 Flash, `thinkingBudget: 0`, `temperature: 0` |
 | Database | PostgreSQL |
 | Backend API | Fastify (Node.js/TypeScript) |
-| Auth | Session-based (not JWT) |
+| Auth ⚙️ | Session-based (not JWT) |
 | Infra | Single VPS + Docker Compose + Nginx + Let's Encrypt |
-| Batch strategy | Real-time API calls (not OpenAI/Gemini async Batch API) |
+| Batch strategy | Real-time API calls (not async Batch API) |
 | Pre-filter stack | F1 (bot sender) → F2 (non-text) → F3 (trivial) — centralized, deferred to Architecture |
 | `hokim_related` | Boolean flag only, never a category enum value |
-| Signal retention | 90 days |
+| Signal retention ⚙️ | 90 days |
 | Raw message retention | Delete after classification |
 | Pilot monthly cost | ~$7–9.50/month total |
-
----
-
-### Immediate Next Step
-
-**Create PRD** using the `bmad-create-prd` skill (John / PM agent).
-
-Inputs ready:
-- `project-raw-idea.md` — raw idea with 10 open product questions (§22)
-- Technical research — feasibility confirmed, stack decided, constraints known
-- Domain research — stakeholder map, workflow, 7 open discovery questions
-- User-client preferences log — confirmed decisions
-
-The PRD must resolve all open questions from both research documents before moving to UX Design and Architecture phases.
 
 ---
 

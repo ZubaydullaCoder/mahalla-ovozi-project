@@ -4,7 +4,7 @@
 
 This document records confirmed developer (Zubaydulla) and client preferences related to the **Mahalla Ovozi** project — covering technology choices, architectural principles, workflow habits, and product decisions. It is updated at the end of each working session.
 
-The purpose is to give AI assistants (and future collaborators) a persistent, searchable record of decisions that have been consciously made so they are not re-debated, re-proposed, or accidentally reversed in future sessions.
+The purpose is to give AI assistants (and future collaborators) a persistent, searchable reference of preferences expressed at a point in time. Preferences are **living decisions** — they should be consulted as a starting point, and consciously updated when context, constraints, or priorities change. They are not permanent locks.
 
 **Format per entry:** Date · Category · Preference · Rationale (if given)
 
