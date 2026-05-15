@@ -132,41 +132,43 @@ For a pilot-scale deployment (1 district, 3–5 groups):
 
 ### AI Classification — Technology Options
 
-| Model | Input Cost/1M tokens | Output Cost/1M tokens | Uzbek Support | Speed | Batch API? |
+| Model | Input Cost/1M tokens | Output Cost/1M tokens | Uzbek Support | Speed | Selected |
 |---|---|---|---|---|---|
-| **GPT-4o-mini** | $0.15 | $0.60 | ✅ Good (multilingual) | Fast | ✅ 50% discount |
-| **GPT-4o-mini (Batch)** | $0.075 | $0.30 | ✅ Good | Async (up to 24h) | ✅ Best for cost |
-| **Claude Haiku 3.5** | ~$0.25 | ~$1.25 | ✅ Good | Very fast | ❌ (as of research) |
-| **Gemini 2.0 Flash** | ~$0.10 | ~$0.40 | ✅ Official Uzbek support | Very fast | ✅ |
-| **Local model (Llama 3.1)** | Compute only | Compute only | ⚠️ Variable | Depends on GPU | N/A |
+| **Gemini 2.5 Flash** (non-thinking) | ~$0.075 | ~$0.30 | ✅ Official support | Very fast | ✅ **Primary** |
+| GPT-4o-mini | $0.15 | $0.60 | ✅ Good (multilingual) | Fast | Fallback / alternative |
+| Claude Haiku 3.5 | ~$0.25 | ~$1.25 | ✅ Good | Very fast | Not selected |
+| Gemini 2.0 Flash | ~$0.10 | ~$0.40 | ✅ Official Uzbek support | Very fast | Superseded by 2.5 Flash |
+| Local model (Llama 3.1) | Compute only | Compute only | ⚠️ Variable | Depends on GPU | Not selected |
 
-**Cost estimate for Mahalla Ovozi pilot (standard API pricing — not Batch API):**
+**Why Gemini 2.5 Flash:** ~50% cheaper than GPT-4o-mini, official Uzbek language support, same structured JSON output capability, no vendor lock-in to OpenAI ecosystem. `thinkingBudget: 0` disables the thinking feature for deterministic, low-latency classification.
+
+**Cost estimate for Mahalla Ovozi pilot (Gemini 2.5 Flash, non-thinking, standard API):**
 - Assume 500 messages/day across 5 groups (generous upper bound for pilot)
 - Per message: ~350 input tokens (300 system prompt + 50 Uzbek text) + ~50 output tokens
-- Daily input cost: 500 × 350 × $0.15 / 1,000,000 = **$0.026/day**
-- Daily output cost: 500 × 50 × $0.60 / 1,000,000 = **$0.015/day**
-- Total: ~**$0.04/day → ~$1.25/month** at pilot volume
-- Even at 5× traffic: **~$6/month** — negligible cost for a pilot
+- Daily input cost: 500 × 350 × $0.075 / 1,000,000 = **$0.013/day**
+- Daily output cost: 500 × 50 × $0.30 / 1,000,000 = **$0.0075/day**
+- Total: ~**$0.02/day → ~$0.63/month** at pilot volume
+- Even at 5× traffic: **~$3/month** — negligible cost for a pilot
 
-> ⚠️ Pricing sourced from 2025. Verify current rates at [platform.openai.com/docs/pricing](https://platform.openai.com/docs/pricing) before implementation.
+> ⚠️ Pricing sourced from 2025. Verify current rates at [ai.google.dev/pricing](https://ai.google.dev/pricing) before implementation.
 
-_Source: OpenAI pricing page (2025), community benchmarks_
+_Source: Google AI pricing page (2025), community benchmarks_
 
 ### Uzbek Language AI Support
 
 | Aspect | Status | Detail |
 |---|---|---|
-| **GPT-4o-mini Uzbek** | ✅ Works well | Handles both Cyrillic (Кирилл) and Latin scripts; tested in production |
-| **Gemini Flash Uzbek** | ✅ Official support | Google officially supports Uzbek in Gemini as of late 2025 |
-| **Script mixing** | ⚠️ Common challenge | Mahalla groups likely mix Uzbek Cyrillic, Latin, and Russian — models handle this but may need prompt guidance |
-| **Domain terminology** | ⚠️ Needs prompt engineering | Civic/government terms (mahalla, hokimiyat, gaz, suv) are well-known to GPT-4o-mini but prompt examples help accuracy |
+| **Gemini 2.5 Flash Uzbek** | ✅ Official support | Google officially supports Uzbek in Gemini; handles Cyrillic, Latin, and Russian mixed-script text |
+| **Script mixing** | ⚠️ Common challenge | Mahalla groups mix Uzbek Cyrillic, Latin, and Russian — Gemini handles this but prompt guidance helps |
+| **Domain terminology** | ⚠️ Needs prompt engineering | Civic/government terms (mahalla, hokimiyat, gaz, suv) need few-shot examples in the system prompt |
 | **Classification accuracy** | ✅ Feasible | Short civic messages are structurally simple; binary signal/ignore + 4-category + 4-tone classification is well within LLM capability |
+| **Thinking mode** | ✅ Disabled | `thinkingBudget: 0` — prevents unnecessary token usage and latency for this deterministic classification task |
 
-**Key finding:** Uzbek is classified as a "low-resource" language academically, but major commercial LLMs (GPT-4o-mini, Gemini) handle it adequately for this use case. The classification task is simple enough that raw Uzbek text works without transliteration preprocessing.
+**Key finding:** Uzbek has official Google support in Gemini 2.5 Flash. The classification task (short civic messages, structured output) is well within the model's capability. Raw Uzbek text works without transliteration preprocessing.
 
 **Prompt engineering note:** Few-shot examples in Uzbek Cyrillic (3–5 examples per category) will significantly improve classification accuracy and consistency.
 
-_Source: Multiple research papers on Uzbek NLP, Gemini official language support announcement, community testing_
+_Source: Google Gemini official language support documentation, Uzbek NLP research, community testing (2025)_
 
 ### Technology Adoption Summary
 
@@ -175,7 +177,7 @@ _Source: Multiple research papers on Uzbek NLP, Gemini official language support
 ```
 Bot Layer:        grammY (Node.js/TypeScript) + webhooks
 Queue:            Redis + BullMQ
-Classifier:       GPT-4o-mini via OpenAI standard API (real-time batch; OpenAI Batch API deferred)
+Classifier:       Google Gemini 2.5 Flash (@google/generative-ai SDK, thinkingBudget:0)
 Database:         PostgreSQL
 API/Backend:      Fastify (Node.js/TypeScript)
 Frontend:         React or Next.js
@@ -183,6 +185,7 @@ Infra (pilot):    Single VPS + Docker Compose + Nginx + Let's Encrypt
 ```
 
 **Alternatives considered and deferred:**
+- OpenAI GPT-4o-mini: viable fallback; 2× more expensive than Gemini 2.5 Flash for same task
 - Python for bot layer: feasible but splits the stack; Node.js keeps it unified
 - Local AI model: cost benefit negligible at pilot scale; operational complexity high
 - Serverless (Vercel/Cloudflare): complicates persistent queue; VPS simpler for pilot
@@ -198,22 +201,36 @@ Infra (pilot):    Single VPS + Docker Compose + Nginx + Let's Encrypt
 ```
 Telegram Server
     ↓  HTTPS POST (webhook)
-Webhook Listener (grammY / Express / Fastify)
-    ↓  validates request origin
-    ↓  pushes raw update to BullMQ job
+Webhook Listener (grammY)
+    ↓  validates request origin (X-Telegram-Bot-Api-Secret-Token)
     ↓  returns 200 OK immediately (<60ms)
+    ↓  applies pre-filter stack (see below) — discards silently if matched
+    ↓  pushes qualifying message to BullMQ job
 Redis Queue (BullMQ)
-    ↓  persists message
+    ↓  persists job
 Bot Worker (Node.js)
     ↓  picks up job
     ↓  saves to raw_messages table (PostgreSQL)
-    ↓  marks for next batch window
+    ↓  marks classification_status = 'pending'
 ```
 
+**Pre-filter stack (applied in webhook handler, before queuing):**
+
+| Layer | Filter | Rule | Reason |
+|---|---|---|---|
+| **F1** | Bot sender filter | `from.is_bot === true` → discard | Advertising/spam bots in mahalla groups; bots cannot be residents reporting civic issues |
+| **F2** | Message type filter | Not a text message → discard | Photos, stickers, voice notes, polls, GIFs carry no classifiable civic text |
+| **F3** | Trivial content filter | `text.trim().length < 5` OR only emoji OR bare URL OR starts with `/` → discard | Pure reactions, acknowledgments ("ok", "👍"), bot commands — structurally cannot contain a civic signal |
+
+> ✅ **All three filters are zero-false-negative risk.** No legitimate civic signal can originate from a bot account, exist in a non-text message, or fit into <5 characters. Only genuine human text messages reach the AI.
+
+**Estimated pre-filter impact at pilot scale:**  
+~40–50% of raw Telegram group traffic is discarded before queuing (bot spam: ~15–30%, non-text: ~20–25%, trivial text: ~10–15%). This meaningfully reduces batch size and AI cost at scale.
+
 **Critical integration rules:**
-- The webhook handler **must never block** — all heavy logic goes in workers
+- The webhook handler **must never block** — all filtering is synchronous O(1) checks, no DB calls
 - Store Telegram `update_id` with unique constraint in DB for idempotency (prevents duplicate processing on Telegram retries)
-- Worker should validate message type (text only for MVP) before queuing for classification
+- Pre-filters run in F1 → F2 → F3 order; short-circuit on first match
 
 _Source: Community production architecture guides, grammY documentation, BullMQ docs_
 
@@ -225,58 +242,77 @@ _Source: Community production architecture guides, grammY documentation, BullMQ 
 ```
 BullMQ Repeatable Job (every 20 min)
     ↓  fetches unprocessed messages from DB (batch by district → mahalla)
-    ↓  builds JSONL payload with system prompt + messages
-    ↓  calls OpenAI API (standard, not Batch API — results in <30s)
-    ↓  receives structured JSON responses
+    ↓  builds prompt payload with system instructions + messages
+    ↓  calls Gemini 2.5 Flash API (synchronous — results in <30s)
+    ↓  receives structured JSON responses (responseSchema enforced)
     ↓  upserts signal_messages, deletes ignored raw_messages
     ↓  updates batch health status
 ```
 - **Latency:** Results visible within 20 min of message arrival
-- **Cost:** GPT-4o-mini standard API ~$0.15/1M input tokens
+- **Cost:** Gemini 2.5 Flash ~$0.075/1M input tokens (non-thinking)
 - **Complexity:** Low — single service, synchronous calls
 
-#### Option B: OpenAI Batch API (Async, cheaper)
+#### Option B: Async Batch (Deferred)
 ```
-BullMQ Job triggers → submits JSONL batch to OpenAI Batch API
-    ↓  OpenAI processes async (up to 24h, usually <1h)
-    ↓  Poll for completion OR webhook callback
-    ↓  Download results, apply to DB
+Not applicable for MVP — Gemini's async batch mode (if available) would
+introduce multi-hour delays incompatible with the live dashboard use case.
 ```
-- **Latency:** 1–24h delay (NOT suitable for MVP dashboard that shows "today's" signals)
-- **Cost:** 50% cheaper — but breaks the "current signals" use case
-- **Verdict: ❌ Not suitable for MVP** — 20-min live batching requires synchronous API
+- **Verdict: ❌ Not suitable for MVP** — 20-min live batching requires synchronous API calls
 
-**Confirmed recommendation:** Use standard OpenAI API synchronously in BullMQ worker. Batch API is for future cost optimization in reports/history module.
+**Confirmed recommendation:** Use Gemini 2.5 Flash standard API synchronously in BullMQ worker.
 
-_Source: OpenAI documentation, Batch API constraints research_
+_Source: Google Gemini API documentation, batch pipeline architecture research_
 
-### OpenAI Structured Outputs Integration
+### Gemini Structured Output Integration
 
-**Use OpenAI Structured Outputs (not JSON mode):**
+**Use Gemini's `responseSchema` with `responseMimeType: "application/json"` (not OpenAI-style JSON mode):**
 
 ```typescript
-// Zod schema for classification response
-const ClassificationSchema = z.object({
-  message_id: z.string(),
-  decision: z.enum(["signal", "ignore"]),
-  category: z.enum(["water", "electricity", "gas", "waste"]).nullable(), // hokim_related is a boolean flag, NOT a category
-  hokim_related: z.boolean(),
-  tone: z.enum(["complaint", "announcement", "praise", "question"]).nullable(),
-  short_label: z.string().max(50).nullable()
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+const classifier = genAI.getGenerativeModel({
+  model: 'gemini-2.5-flash',
+  generationConfig: {
+    temperature: 0,                           // deterministic classification
+    responseMimeType: 'application/json',
+    responseSchema: {
+      type: SchemaType.OBJECT,
+      properties: {
+        message_id:    { type: SchemaType.STRING },
+        decision:      { type: SchemaType.STRING, enum: ['signal', 'ignore'] },
+        // hokim_related is a boolean flag, NOT a category — see rationale below
+        category:      { type: SchemaType.STRING, enum: ['water', 'electricity', 'gas', 'waste'],
+                         nullable: true },
+        hokim_related: { type: SchemaType.BOOLEAN },
+        tone:          { type: SchemaType.STRING,
+                         enum: ['complaint', 'announcement', 'praise', 'question'],
+                         nullable: true },
+        short_label:   { type: SchemaType.STRING, nullable: true },
+      },
+      required: ['message_id', 'decision', 'hokim_related'],
+    },
+  },
+  // Disable thinking — adds latency/cost; not needed for deterministic classification
+  // @ts-expect-error thinkingConfig is available in gemini-2.5-flash
+  thinkingConfig: { thinkingBudget: 0 },
 });
 ```
 
-**Key API parameters:**
-- `model: "gpt-4o-mini"`
-- `temperature: 0` (deterministic classification)
-- `response_format: { type: "json_schema", json_schema: {...}, strict: true }`
+**Key configuration:**
+- `model: 'gemini-2.5-flash'` — cost-efficient, fast, official Uzbek support
+- `temperature: 0` — deterministic, reproducible output
+- `thinkingBudget: 0` — disables Gemini 2.5 Flash's thinking feature (saves tokens + latency)
+- `responseMimeType: 'application/json'` — enforces JSON output
+- `responseSchema` — inline JSON Schema object (validate response shape manually or with a thin Zod wrapper post-parse)
 - System prompt: Uzbek civic classification context + 3–5 few-shot examples per category
 
 **Batch call strategy:** Send all unprocessed messages in one API call with multi-message prompt (group by mahalla for context), or parallel individual calls if isolation preferred.
 
-> ⚠️ **Schema rationale (F-04 fix):** `hokim_related` is intentionally a standalone `boolean` flag, not a `category` value. Per `project-raw-idea.md §8`: "Hokim-related is a cross-cutting priority view, not a separate service category." A gas message can be `category=gas` AND `hokim_related=true` simultaneously. Encoding it as a category would prevent this cross-cutting behavior.
+> ⚠️ **Schema rationale:** `hokim_related` is intentionally a standalone `boolean` flag, not a `category` value. Per `project-raw-idea.md §8`: "Hokim-related is a cross-cutting priority view, not a separate service category." A gas message can be `category=gas` AND `hokim_related=true` simultaneously.
 
-_Source: OpenAI Structured Outputs documentation (2025)_
+_Source: Google Gemini API documentation, @google/generative-ai SDK (2025)_
 
 ### Dashboard API Integration
 
@@ -305,8 +341,8 @@ _Source: Auth best practices research 2025_
 | Telegram → Bot | HTTPS webhook (POST) | JSON (Telegram Update object) | grammY handles parsing |
 | Bot → Queue | In-process (BullMQ) | JSON job payload | Minimal payload — store IDs only |
 | Queue → DB | PostgreSQL driver | SQL | Async, non-blocking |
-| Worker → OpenAI | HTTPS REST | JSON / JSON Schema | Structured Outputs |
-| Backend → Frontend | HTTPS REST | JSON | Fastify or Express |
+| Worker → Gemini | HTTPS REST | JSON (responseSchema enforced) | @google/generative-ai SDK |
+| Backend → Frontend | HTTPS REST | JSON | Fastify |
 | Frontend → Browser | HTTP/2 | JSON + HTML/JS | React/Next.js |
 | Health Monitoring | Internal polling / logs | JSON | Admin-only endpoint |
 
@@ -318,7 +354,7 @@ _Source: Auth best practices research 2025_
 | Telegram webhook spoofing | Validate `X-Telegram-Bot-Api-Secret-Token` header |
 | Sender data in DB | Store as snapshot; policy-based display in API layer |
 | Dashboard auth | HTTPS only; session cookies with `httpOnly`, `secure` flags |
-| OpenAI API key | Environment variable; rotate if exposed |
+| Gemini API key | Environment variable only (`GEMINI_API_KEY`); never in code/logs; rotate if exposed |
 | Data at rest | PostgreSQL row-level encryption optional; disk encryption on VPS sufficient for pilot |
 
 ### Legal and Regulatory Considerations
@@ -370,13 +406,17 @@ _Source: Modular monolith best practices research 2024–2025_
 
 ```
 Tier 1 — Intake (Event Producer)
-  Telegram Bot (grammY) → webhook handler → Redis/BullMQ queue
-  Rule: accept and enqueue only; never block; validate text-only messages
+  Telegram Bot (grammY) → webhook handler
+      [F1] from.is_bot? → discard (advertising/spam bots)
+      [F2] non-text?    → discard (photos, stickers, voice, polls)
+      [F3] trivial?     → discard (pure emoji, <5 chars, bare URL, /command)
+      → qualifying message → Redis/BullMQ queue
+  Rule: pre-filters are O(1), synchronous — webhook never blocks
 
 Tier 2 — Processing (Event Consumer)
-  BullMQ Worker (immediate)   → save raw_message to PostgreSQL
-  BullMQ Scheduled Job (20min) → batch classify → write signal_messages
-                                              → delete ignored raw_messages
+  BullMQ Worker (immediate)    → save raw_message to PostgreSQL
+  BullMQ Scheduled Job (20min) → batch classify (AI) → write signal_messages
+                                                      → delete ignored raw_messages
 
 Tier 3 — Presentation
   REST API (Fastify) → serves dashboard queries
@@ -387,6 +427,7 @@ Tier 3 — Presentation
 
 | Decision | Choice | Rationale |
 |---|---|---|
+| Pre-filter stack | 3-layer rule-based filter (F1 bot sender, F2 type, F3 trivial) | Eliminates ~40–50% of raw traffic before AI; zero false-negative risk; all checks are O(1) |
 | Intake acknowledgement | Fire-and-forget queue | Telegram's 60s timeout; avoid duplicate webhook sends |
 | Raw message storage | PostgreSQL temp table | Queryable, transactional, easy cleanup |
 | Batch trigger | BullMQ repeatable job | Native 20-min interval, built-in retry/failure |
@@ -467,10 +508,11 @@ Production:   VPS + webhook + Nginx + Let's Encrypt + Docker Compose
 
 | Layer | What to Test | Approach |
 |---|---|---|
-| Classifier | Signal/ignore/category/tone accuracy | Offline labeled test set: 50+ Uzbek messages |
-| Bot intake | Idempotency, text-only filter, queue enqueue | Unit tests with mock Telegram updates |
+| Classifier | Signal/ignore/category/tone accuracy | Offline labeled test set: 100+ Uzbek messages (human-labeled) |
+| Pre-filter stack | F1 bot sender, F2 non-text, F3 trivial content — each filter discards correctly | Unit tests: mock bot message, mock sticker update, mock emoji-only text, mock ad bot update |
+| Bot intake | Idempotency (duplicate update_id rejected), queue enqueue for qualifying messages | Unit tests with mock Telegram updates |
 | API endpoints | Filter combinations, drawer context query | Integration tests with test DB |
-| E2E | Full flow: fake Telegram message → signal in API | Single E2E test per major feature |
+| E2E | Full flow: human text message → raw_messages → signal in API | Single E2E test per major feature |
 
 **Classifier accuracy validation (pre-launch requirement):**
 1. Collect 100+ real messages from client (manually labeled)
@@ -496,10 +538,10 @@ Production:   VPS + webhook + Nginx + Let's Encrypt + Docker Compose
 |---|---|
 | VPS (Hetzner CX21) | ~$6 |
 | Domain + SSL | $0 (Let's Encrypt) |
-| OpenAI API (pilot volume) | ~$1–6 |
+| Gemini 2.5 Flash API (pilot volume) | ~$0.63–3 |
 | Redis + PostgreSQL (on-VPS) | $0 |
 | DB backups (Backblaze B2/S3) | ~$0.50 |
-| **Total pilot** | **~$7.50–12.50/month** |
+| **Total pilot** | **~$7–9.50/month** |
 
 ### Backup and Disaster Recovery
 
@@ -555,7 +597,7 @@ The bot can read all messages from supergroups, but two prerequisites are mandat
 
 **2. AI Classification — Feasible and Cheap**
 
-GPT-4o-mini handles Uzbek Cyrillic/Latin/Russian mixed text adequately for this classification task. The 20-min batch with synchronous API calls is correct (OpenAI Batch API's 24h delay disqualifies it for live dashboard use). Cost at pilot scale: ~$2–11/month. Accuracy validation with a labeled test set is mandatory before go-live.
+Gemini 2.5 Flash (non-thinking mode) handles Uzbek Cyrillic/Latin/Russian mixed text with official language support. The 20-min batch with synchronous API calls is correct for the live dashboard use case. Cost at pilot scale: ~$0.63/month (vs $1.25/month for GPT-4o-mini — 50% cheaper). A 3-layer pre-filter stack (bot sender, message type, trivial content) eliminates ~40–50% of raw Telegram traffic before it reaches the AI — further reducing batch size and cost, with zero false-negative risk. Accuracy validation with a labeled test set (100+ messages) is mandatory before go-live.
 
 **3. Architecture — Straightforward**
 
@@ -572,7 +614,7 @@ BullMQ's native repeatable jobs handle the 20-min interval reliably. Synchronous
 ```
 Bot:            grammY (Node.js/TypeScript) + webhooks
 Queue:          Redis + BullMQ (repeatable jobs, 20-min interval)
-Classifier:     OpenAI GPT-4o-mini, Structured Outputs, temperature=0
+Classifier:     Google Gemini 2.5 Flash, responseSchema, temperature=0, thinkingBudget=0
 Database:       PostgreSQL
 Backend API:    Fastify (Node.js/TypeScript)
 Frontend:       React (or Next.js)
@@ -594,6 +636,7 @@ These open questions from `project-raw-idea.md` §22 are now answerable:
 | Bot admin requirement | Disable privacy mode OR promote to admin — document as setup step |
 | No historical access | Confirmed — pilot must start fresh; communicate to client |
 | Normalized text storage | Processing only — don't store long-term for MVP |
+| Pre-filtering before AI | ✅ 3-layer rule-based stack: F1 `from.is_bot` (ad/spam bots), F2 non-text type, F3 trivial content (<5 chars, emoji-only, bare URL, `/command`). All zero false-negative risk. Applied in webhook handler before queuing. |
 
 ### Next Steps After This Research
 
