@@ -112,7 +112,7 @@ _Source: Telegram Bot API official docs, community research 2024–2025_
 | **Job Scheduler** | BullMQ (Node.js) | 20-min batch trigger, retry logic, failure tracking |
 | **Temp raw storage** | PostgreSQL table with TTL flag OR Redis queue | Hold unprocessed messages before classification |
 
-**BullMQ for 20-min batch:** Natively supports repeatable jobs at fixed intervals (`repeat: { every: 20 * 60 * 1000 }`). Built-in retry, failure handling, and visual monitoring (Bull Board). No external cron needed.
+**BullMQ for 20-min batch:** Natively supports repeatable jobs at fixed intervals. Use `upsertJobScheduler` (v5.16.0+, the current recommended API): `queue.upsertJobScheduler('classification-batch', { every: 20 * 60 * 1000 }, { name: 'classify-batch' })`. The older `repeat: { every: ... }` option still works but is deprecated — avoid using it in new code. Built-in retry, failure handling, and visual monitoring (Bull Board). No external cron needed.
 
 _Source: BullMQ documentation, Redis official docs_
 
@@ -134,23 +134,32 @@ For a pilot-scale deployment (1 district, 3–5 groups):
 
 | Model | Input Cost/1M tokens | Output Cost/1M tokens | Uzbek Support | Speed | Selected |
 |---|---|---|---|---|---|
-| **Gemini 2.5 Flash** (non-thinking) | ~$0.075 | ~$0.30 | ✅ Official support | Very fast | ✅ **Primary** |
+| **Gemini 2.5 Flash** (non-thinking) | $0.30 | $2.50 | ✅ Official support | Very fast | ✅ **Primary** |
 | GPT-4o-mini | $0.15 | $0.60 | ✅ Good (multilingual) | Fast | Fallback / alternative |
 | Claude Haiku 3.5 | ~$0.25 | ~$1.25 | ✅ Good | Very fast | Not selected |
 | Gemini 2.0 Flash | ~$0.10 | ~$0.40 | ✅ Official Uzbek support | Very fast | Superseded by 2.5 Flash |
 | Local model (Llama 3.1) | Compute only | Compute only | ⚠️ Variable | Depends on GPU | Not selected |
 
-**Why Gemini 2.5 Flash:** ~50% cheaper than GPT-4o-mini, official Uzbek language support, same structured JSON output capability, no vendor lock-in to OpenAI ecosystem. `thinkingBudget: 0` disables the thinking feature for deterministic, low-latency classification.
+**Why Gemini 2.5 Flash (chosen for fidelity, not cost):**
 
-**Cost estimate for Mahalla Ovozi pilot (Gemini 2.5 Flash, non-thinking, standard API):**
-- Assume 500 messages/day across 5 groups (generous upper bound for pilot)
-- Per message: ~350 input tokens (300 system prompt + 50 Uzbek text) + ~50 output tokens
-- Daily input cost: 500 × 350 × $0.075 / 1,000,000 = **$0.013/day**
-- Daily output cost: 500 × 50 × $0.30 / 1,000,000 = **$0.0075/day**
-- Total: ~**$0.02/day → ~$0.63/month** at pilot volume
-- Even at 5× traffic: **~$3/month** — negligible cost for a pilot
+| Factor | GPT-4o-mini | Gemini 2.5 Flash |
+|---|---|---|
+| Input cost / 1M | $0.15 ✅ cheaper | $0.30 |
+| Output cost / 1M | $0.60 ✅ cheaper | $2.50 |
+| Uzbek support | ✅ Good (multilingual) | ✅ **Official** |
+| JSON structured output | ✅ via `response_format` | ✅ via native `responseSchema` |
 
-> ⚠️ Pricing sourced from 2025. Verify current rates at [ai.google.dev/pricing](https://ai.google.dev/pricing) before implementation.
+**Verified cost comparison at Mahalla Ovozi pilot volume (500 msg/day, 350 input + 50 output tokens/msg):**
+- GPT-4o-mini: ~**$1.23/month** (5× traffic: ~$6.15/month)
+- Gemini 2.5 Flash: ~**$3.47/month** (5× traffic: ~$17/month)
+- **Delta: Gemini is 2.8× more expensive overall** — an extra ~$2.24/month at pilot scale
+
+**Decision rationale:** Gemini 2.5 Flash is selected **despite the higher cost** because:
+1. Official Uzbek language support reduces prompt engineering burden for Cyrillic/Latin/Russian mixed-script text
+2. At pilot scale the absolute cost delta (~$2.24/month) is negligible
+3. GPT-4o-mini remains a viable **cost-driven fallback** if Gemini accuracy proves insufficient or pricing rises further
+
+> ✅ `thinkingBudget: 0` confirmed to prevent thinking tokens from being generated — no hidden billing. Pricing verified May 2026. Re-verify at [ai.google.dev/pricing](https://ai.google.dev/pricing) before implementation.
 
 _Source: Google AI pricing page (2025), community benchmarks_
 
@@ -177,7 +186,7 @@ _Source: Google Gemini official language support documentation, Uzbek NLP resear
 ```
 Bot Layer:        grammY (Node.js/TypeScript) + webhooks
 Queue:            Redis + BullMQ
-Classifier:       Google Gemini 2.5 Flash (@google/generative-ai SDK, thinkingBudget:0)
+Classifier:       Google Gemini 2.5 Flash (@google/genai SDK, thinkingBudget:0)
 Database:         PostgreSQL
 API/Backend:      Fastify (Node.js/TypeScript)
 Frontend:         React or Next.js
@@ -185,7 +194,7 @@ Infra (pilot):    Single VPS + Docker Compose + Nginx + Let's Encrypt
 ```
 
 **Alternatives considered and deferred:**
-- OpenAI GPT-4o-mini: viable fallback; 2× more expensive than Gemini 2.5 Flash for same task
+- OpenAI GPT-4o-mini: viable cost-driven fallback; 2.8× cheaper than Gemini 2.5 Flash overall ($1.23 vs $3.47/month at pilot volume); chosen as fallback not primary because Gemini has superior official Uzbek support
 - Python for bot layer: feasible but splits the stack; Node.js keeps it unified
 - Local AI model: cost benefit negligible at pilot scale; operational complexity high
 - Serverless (Vercel/Cloudflare): complicates persistent queue; VPS simpler for pilot
@@ -268,36 +277,40 @@ _Source: Google Gemini API documentation, batch pipeline architecture research_
 **Use Gemini's `responseSchema` with `responseMimeType: "application/json"` (not OpenAI-style JSON mode):**
 
 ```typescript
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+// SDK: @google/genai (unified SDK — replaces deprecated @google/generative-ai)
+// npm install @google/genai
+import { GoogleGenAI } from '@google/genai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-const classifier = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
-  generationConfig: {
-    temperature: 0,                           // deterministic classification
-    responseMimeType: 'application/json',
-    responseSchema: {
-      type: SchemaType.OBJECT,
-      properties: {
-        message_id:    { type: SchemaType.STRING },
-        decision:      { type: SchemaType.STRING, enum: ['signal', 'ignore'] },
-        // hokim_related is a boolean flag, NOT a category — see rationale below
-        category:      { type: SchemaType.STRING, enum: ['water', 'electricity', 'gas', 'waste'],
-                         nullable: true },
-        hokim_related: { type: SchemaType.BOOLEAN },
-        tone:          { type: SchemaType.STRING,
-                         enum: ['complaint', 'announcement', 'praise', 'question'],
-                         nullable: true },
-        short_label:   { type: SchemaType.STRING, nullable: true },
+async function classifyMessages(prompt: string): Promise<string> {
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: {
+      temperature: 0,                        // deterministic classification
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'object',
+        properties: {
+          message_id:    { type: 'string' },
+          decision:      { type: 'string', enum: ['signal', 'ignore'] },
+          // hokim_related is a boolean flag, NOT a category — see rationale below
+          category:      { type: 'string',  enum: ['water', 'electricity', 'gas', 'waste'],
+                           nullable: true },
+          hokim_related: { type: 'boolean' },
+          tone:          { type: 'string',
+                           enum: ['complaint', 'announcement', 'praise', 'question'],
+                           nullable: true },
+          short_label:   { type: 'string', nullable: true },
+        },
+        required: ['message_id', 'decision', 'hokim_related'],
       },
-      required: ['message_id', 'decision', 'hokim_related'],
+      thinkingConfig: { thinkingBudget: 0 }, // disable thinking — no @ts-expect-error needed
     },
-  },
-  // Disable thinking — adds latency/cost; not needed for deterministic classification
-  // @ts-expect-error thinkingConfig is available in gemini-2.5-flash
-  thinkingConfig: { thinkingBudget: 0 },
-});
+  });
+  return response.text ?? '';
+}
 ```
 
 **Key configuration:**
@@ -390,7 +403,7 @@ For a small team building an internal tool at pilot scale, a **Modular Monolith*
 /src
   /bot          — Telegram webhook handler, message intake
   /queue        — BullMQ worker configuration, job definitions
-  /classifier   — OpenAI integration, prompt management, response parsing
+  /classifier   — Gemini integration, prompt management, response parsing
   /signals      — Signal message domain: storage, queries, retention
   /dashboard    — REST API layer for frontend (filters, lanes, drawer)
   /auth         — Session management, user access control
@@ -538,10 +551,10 @@ Production:   VPS + webhook + Nginx + Let's Encrypt + Docker Compose
 |---|---|
 | VPS (Hetzner CX21) | ~$6 |
 | Domain + SSL | $0 (Let's Encrypt) |
-| Gemini 2.5 Flash API (pilot volume) | ~$0.63–3 |
+| Gemini 2.5 Flash API (pilot volume) | ~$3.47–17 |
 | Redis + PostgreSQL (on-VPS) | $0 |
 | DB backups (Backblaze B2/S3) | ~$0.50 |
-| **Total pilot** | **~$7–9.50/month** |
+| **Total pilot** | **~$9.50–23/month** |
 
 ### Backup and Disaster Recovery
 
@@ -571,7 +584,7 @@ Production:   VPS + webhook + Nginx + Let's Encrypt + Docker Compose
 | Telegram bot kicked from group | Low-Med | High | Monitor `my_chat_member` events; alert operator |
 | Bot offline >24h → updates lost | Low | High | Reliable VPS + Docker restart policy |
 | Privacy mode not disabled properly | Medium | High | Setup checklist before adding bot to each group |
-| OpenAI API downtime | Low | Medium | Show "processing delayed" indicator; retry on next batch |
+| Gemini API downtime | Low | Medium | Show "processing delayed" indicator; retry on next batch |
 | Hokim finds UI confusing | Low-Med | Medium | UX testing session before pilot go-live |
 
 ---
@@ -597,7 +610,7 @@ The bot can read all messages from supergroups, but two prerequisites are mandat
 
 **2. AI Classification — Feasible and Cheap**
 
-Gemini 2.5 Flash (non-thinking mode) handles Uzbek Cyrillic/Latin/Russian mixed text with official language support. The 20-min batch with synchronous API calls is correct for the live dashboard use case. Cost at pilot scale: ~$0.63/month (vs $1.25/month for GPT-4o-mini — 50% cheaper). A 3-layer pre-filter stack (bot sender, message type, trivial content) eliminates ~40–50% of raw Telegram traffic before it reaches the AI — further reducing batch size and cost, with zero false-negative risk. Accuracy validation with a labeled test set (100+ messages) is mandatory before go-live.
+Gemini 2.5 Flash (non-thinking mode) handles Uzbek Cyrillic/Latin/Russian mixed text with official language support. The 20-min batch with synchronous API calls is correct for the live dashboard use case. Cost at pilot scale: ~$3.47/month (verified May 2026); at 5× traffic ~$17/month — still affordable for a pilot. Note: Gemini 2.5 Flash output pricing ($2.50/1M) is higher than GPT-4o-mini ($0.60/1M) — Gemini is chosen for superior Uzbek language fidelity, not cost. A 3-layer pre-filter stack (bot sender, message type, trivial content) eliminates ~40–50% of raw Telegram traffic before it reaches the AI — further reducing batch size and cost, with zero false-negative risk. Accuracy validation with a labeled test set (100+ messages) is mandatory before go-live.
 
 **3. Architecture — Straightforward**
 
@@ -605,7 +618,7 @@ Modular monolith + event-driven pipeline (grammY → BullMQ → PostgreSQL → F
 
 **4. 20-Minute Batch Pipeline — Validated**
 
-BullMQ's native repeatable jobs handle the 20-min interval reliably. Synchronous OpenAI API calls complete in <30s for a typical batch. The full pipeline works end-to-end with the chosen stack.
+BullMQ's native repeatable jobs handle the 20-min interval reliably (use `upsertJobScheduler` — `repeat: { every }` is deprecated in v5.16.0+). Synchronous Gemini API calls complete in <30s for a typical batch. The full pipeline works end-to-end with the chosen stack.
 
 ---
 
