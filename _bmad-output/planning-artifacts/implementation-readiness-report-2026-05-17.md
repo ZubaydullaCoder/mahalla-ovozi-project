@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ['step-01-document-discovery', 'step-02-prd-analysis', 'step-03-epic-coverage-validation', 'step-04-ux-alignment']
+stepsCompleted: ['step-01-document-discovery', 'step-02-prd-analysis', 'step-03-epic-coverage-validation', 'step-04-ux-alignment', 'step-05-epic-quality-review']
 workflowStatus: 'in-progress'
 workflowType: 'implementation-readiness'
 projectName: 'mahalla-ovozi'
@@ -294,3 +294,45 @@ Known UX-sensitive areas that must be designed before implementation:
 Missing UX design is a hard readiness blocker for implementation because the main product value depends on scanability, clarity, and low-training usability for a non-technical leadership user.
 
 Recommendation: create the UX design artifact before Architecture, so layout, interaction, and state requirements can inform API shape, data loading, performance choices, and story breakdown.
+
+---
+
+## Step 5: Epic Quality Review
+
+### Epic Document Status
+
+Not found.
+
+No epics and stories artifact exists under `_bmad-output/planning-artifacts`.
+
+### Quality Review Result
+
+Epic quality cannot be evaluated yet because there are no epics or stories to inspect.
+
+This is not a defect in written epics; it is a missing-planning-artifact blocker.
+
+### Best-Practice Risks to Enforce When Epics Are Created
+
+When the epics and stories workflow is run, the resulting artifact must avoid these common problems:
+
+- Technical milestone epics such as “Database setup,” “API development,” or “Infrastructure setup” without standalone user value.
+- Forward dependencies where an earlier story requires a later story to be useful or testable.
+- One large upfront database/modeling story that creates all tables before user-value stories need them.
+- Vague acceptance criteria such as “user can login” without testable success and failure paths.
+- Missing traceability from each FR/NFR to at least one epic/story.
+- Stories that mix unrelated concerns such as Telegram intake, classification, dashboard UI, and deployment in one implementation unit.
+
+### Recommendation for Future Epics
+
+Create epics after UX and Architecture are available. Epics should be user-value oriented and independently useful, while still sequencing technical setup where needed.
+
+Likely future epic areas may include:
+
+- Authenticated dashboard access and baseline shell.
+- Telegram intake and monitored group connectivity.
+- Signal classification pipeline and retention behavior.
+- Civic signal dashboard lanes and filters.
+- Context drawer and signal inspection.
+- Operational health and deployment readiness.
+
+These are candidate areas only; final epics should be generated through the BMAD create-epics-and-stories workflow after UX and Architecture are complete.
