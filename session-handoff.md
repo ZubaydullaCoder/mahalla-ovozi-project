@@ -23,6 +23,7 @@ Permanent decisions and artifacts live in the PRD, research docs, architecture d
 
 - PRD is complete and lightly patched after technical research validation.
 - Technical research is corrected and directionally valid, but unstable implementation details are flagged for validation.
+- Implementation readiness assessment is complete and says the project is **not ready for Phase 4 implementation**.
 - UX Design has not started.
 - Architecture has not started.
 - Epics & Stories have not started.
@@ -32,11 +33,13 @@ Permanent decisions and artifacts live in the PRD, research docs, architecture d
 
 ## What Changed in the Previous Session
 
-- Technical research was patched to remove overconfident claims about Gemini 2.5 Flash, AI pricing, Telegram setup behavior, BullMQ API syntax, and pre-filter false-negative risk.
-- PRD was lightly patched to align with corrected technical research without changing MVP scope.
-- `user-client-preferences-log.md` was updated with refined tooling defaults: React + Vite SPA, Drizzle default, Zod runtime validation, separate `web` and `worker` runtime entrypoints, and Fastify with strict module boundaries.
-- Old long handoff file was replaced by this compact overwrite-only `session-handoff.md` workflow.
-- `session-handoff.md` rules were updated so the file records only implemented/completed session context and excludes future plans, next-step recommendations, and unimplemented ideas.
+- `session-handoff.md` Purpose wording was refined for clearer grammar and lower-friction AI handoff use.
+- BMAD implementation readiness workflow was run and completed.
+- `_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-17.md` was created and finalized.
+- The readiness report extracted 34 Functional Requirements and 15 Non-Functional Requirements from the PRD.
+- The readiness report found 0/34 FRs covered by epics/stories because the epics and stories artifact does not exist yet.
+- The readiness report recorded missing UX Design, missing Architecture, and missing Epics & Stories as hard implementation-readiness blockers.
+- `user-client-preferences-log.md` was reviewed after the session; no new durable preference or decision was added because the session produced an assessment artifact rather than a new permanent preference.
 
 ---
 
@@ -72,10 +75,8 @@ Permanent decisions and artifacts live in the PRD, research docs, architecture d
 
 ## Recently Changed Files
 
-- `_bmad-output/planning-artifacts/research/technical-telegram-ai-pipeline-research-2026-05-13.md` — corrected technical research validation stance.
-- `_bmad-output/planning-artifacts/prd.md` — aligned unstable technical wording with corrected research.
-- `user-client-preferences-log.md` — recorded refined tooling preferences and validation rules.
-- `session-handoff.md` — compact overwrite-only session handoff file; updated to exclude future plans, next-step recommendations, and unimplemented ideas.
+- `session-handoff.md` — refined Purpose wording and updated compact session state after readiness assessment.
+- `_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-17.md` — completed implementation readiness assessment; final status: not ready for implementation.
 
 ---
 
