@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ['step-01-document-discovery', 'step-02-prd-analysis', 'step-03-epic-coverage-validation']
+stepsCompleted: ['step-01-document-discovery', 'step-02-prd-analysis', 'step-03-epic-coverage-validation', 'step-04-ux-alignment']
 workflowStatus: 'in-progress'
 workflowType: 'implementation-readiness'
 projectName: 'mahalla-ovozi'
@@ -255,3 +255,42 @@ Critical missing coverage:
 ### Assessment
 
 This is a hard implementation-readiness blocker. The project cannot proceed to Phase 4 implementation until epics and developer-ready stories are created and each FR has traceable coverage.
+
+---
+
+## Step 4: UX Alignment Assessment
+
+### UX Document Status
+
+Not found.
+
+No whole UX document or sharded UX design artifact exists under `_bmad-output/planning-artifacts`.
+
+### UX/UI Implication Assessment
+
+UX is clearly required for this project. The PRD describes a user-facing web dashboard with five independently scrolling lanes, sticky lane headers, signal cards, count displays, filters, search, a right-side context drawer, selected-message highlighting, tone badges, hokim-related indicators, login/protected routes, a non-technical delay indicator, and an operator/admin health endpoint.
+
+The dashboard is also explicitly intended for a busy non-technical hokim and district staff, primarily on a large office monitor. That makes UX design a core readiness artifact, not optional polish.
+
+### Alignment Issues
+
+UX alignment cannot be validated because both UX and Architecture artifacts are missing.
+
+Known UX-sensitive areas that must be designed before implementation:
+
+- Five-lane dashboard layout at 1920x1080 and 1366x768.
+- Independent lane scrolling behavior.
+- Signal item density, truncation, and full-text access.
+- Right-side context drawer layout and selected-message highlighting.
+- Time range, mahalla, and search filter placement.
+- Non-technical delayed-signal indicator wording and placement.
+- Operator/admin health endpoint presentation or access pattern.
+- Uzbek UI terminology, preferably Uzbek Cyrillic for demo content.
+- Hokim-related cross-cutting view indicator behavior.
+- Empty states, loading states, and error/delay states.
+
+### Warnings
+
+Missing UX design is a hard readiness blocker for implementation because the main product value depends on scanability, clarity, and low-training usability for a non-technical leadership user.
+
+Recommendation: create the UX design artifact before Architecture, so layout, interaction, and state requirements can inform API shape, data loading, performance choices, and story breakdown.
