@@ -7,3 +7,4 @@ build/
 .env
 .env.*
 *.log
+dashboard-prototype.html
