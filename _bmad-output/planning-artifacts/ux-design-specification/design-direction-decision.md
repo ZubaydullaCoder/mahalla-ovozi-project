@@ -2,7 +2,9 @@
 
 ## Design Directions Explored
 
-Three interactive design directions were generated and evaluated in [`ux-design-directions.html`](./_bmad-output/planning-artifacts/ux-design-directions.html):
+Three interactive design directions were generated and evaluated in [`ux-design-directions.html`](../ux-design-directions.html).
+
+`ux-design-directions.html` is a static reference prototype only. It is not an implementation source of truth. The chosen source of truth for implementation and Architecture handoff is this sharded UX specification directory.
 
 | Direction | Density | Filter Bar | Lane Headers | Card Border |
 |---|---|---|---|---|
@@ -16,15 +18,15 @@ Three interactive design directions were generated and evaluated in [`ux-design-
 
 ## Design Rationale
 
-- **Glanceability is the primary principle.** Direction A's maximum density (3-line text clamp, 7px card gap, 56px filter bar) most directly serves the 60-second scan loop established in Step 7. More white space (Direction B) reduces the number of signals visible without scrolling, undermining the core value proposition.
+- **Glanceability is the primary principle.** Direction A's maximum density (3-line text clamp, 7px card gap, 56px filter bar) most directly serves the 60-second signal-scan loop established in Step 7. More white space (Direction B) reduces the number of signals visible without scrolling, undermining the core value proposition.
 - **Restrained lane headers reinforce Calm Authority.** Direction A's subtle 3px top-border accent on each lane header avoids the high-saturation alarm feeling that Direction C's fully colored headers produce. Category identity is communicated through color + text label together — not color alone.
 - **Light filter bar preserves visual hierarchy.** The `#FFFFFF` filter bar creates a clear horizontal anchor at the top without competing with the lane content below. Direction C's dark filter bar creates an unnaturally high-contrast seam that draws the eye upward rather than into the lanes.
-- **Compact density matches the real user context.** The hokim reviews this dashboard during brief morning briefings. Compact density maximizes information visible per glance, which is appropriate for a monitoring tool used by an experienced daily user.
+- **Compact density matches the real user context.** The hokim may review this dashboard during briefings or at any other moment when situational awareness is needed. Compact density maximizes information visible per glance, which is appropriate for a monitoring tool used by an experienced daily user.
 
 ## Implementation Approach
 
 - Start with Direction A card dimensions, gap sizes, and filter bar as the production baseline.
-- The context drawer (fully functional in the HTML prototype) confirms the 250ms slide-in + skeleton shimmer + breadcrumb header pattern is correct.
+- The context drawer pattern from the prototype supports the 250ms slide-in + skeleton shimmer + breadcrumb header pattern, but implementation must follow the corrected drawer context rule in `core-user-experience.md`.
 - The delay banner (amber, non-blocking, below filter bar) is confirmed as the correct placement from the prototype.
 - Tone badge legibility at 10–11px on muted pill backgrounds is confirmed as readable at desktop viewing distance.
 
