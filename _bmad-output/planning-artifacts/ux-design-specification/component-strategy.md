@@ -60,7 +60,7 @@ for (signal of allSignals) {
 }
 ```
 
-The same `Signal` object is referenced (not copied) in both lanes. The `<SignalCard>` rendered in each lane receives the lane's own `categoryColor` prop, so the card visually adapts per lane (see `<SignalCard>` spec below).
+The same `Signal` object is referenced (not copied) in both lanes. The `<SignalCard>` rendered in each lane receives the signal's original service category color, so a Hokim-lane card still visually communicates whether it concerns water, electricity, gas, or waste (see `<SignalCard>` spec below).
 
 **Count badge rule:** The lane header count badge reflects the number of cards in that lane after grouping — a duplicated signal increments the count in *both* the Hokim lane and its service lane. This is intentional: the hokim sees the full priority count in the Hokim lane without the service lane counts being suppressed.
 
@@ -103,15 +103,17 @@ The same `Signal` object is referenced (not copied) in both lanes. The `<SignalC
 ```
 
 **Color rule when rendered inside the Ҳокимга тегишли lane:**
-The `categoryColor` prop passed to `<SignalCard>` is **always the signal's original service category color**, even when the card is rendered inside the Hokim lane. The Hokim lane has no color of its own for card borders.
+The `categoryColor` prop passed to `<SignalCard>` is **always the signal's original service category color**, even when the card is rendered inside the Hokim lane. The Hokim lane has no separate override color for card borders.
 
 | Signal | Rendered in | `categoryColor` passed |
 |---|---|---|
-| `category=gaz, hokim_related=true` | Hokim lane | Gas yellow `#854D0E bg` |
-| `category=gaz, hokim_related=true` | Газ lane | Gas yellow `#854D0E bg` |
-| `category=suv, hokim_related=false` | Сув lane | Water blue |
+| `category=gaz, hokim_related=true` | Hokim lane | Gas teal `#1A7060` |
+| `category=gaz, hokim_related=true` | Газ lane | Gas teal `#1A7060` |
+| `category=suv, hokim_related=false` | Сув lane | Water blue `#1D6FA4` |
 
 Rationale: the hokim must instantly know *which service* a Hokim-lane card concerns without opening the drawer. Color is the fastest signal — it must never be overridden by lane membership.
+
+**Drawer context rule:** Clicking a Hokim-lane card still opens the same category-based drawer as any other lane. Example: `category=gaz AND hokim_related=true` clicked from the Hokim lane opens a Gas context drawer for that mahalla/group and active time range. It does **not** open a special drawer filtered only to `hokim_related=true` signals.
 
 **Props:**
 ```typescript
