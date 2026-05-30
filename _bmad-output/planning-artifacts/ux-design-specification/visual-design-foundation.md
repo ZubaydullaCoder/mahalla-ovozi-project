@@ -33,15 +33,6 @@ Deliberately muted mid-tones that read clearly against the `#FAFAF9` container w
 | *Газ* | `categoryGaz` | `#1A7060` | Teal green — pipe / flow systems |
 | *Чиқинди* | `categoryChiqindi` | `#5C6B2E` | Earthy olive — waste, environment |
 
-### Tone Badge Colors (flat pill labels, muted fills)
-
-| Tone | Background | Text |
-|---|---|---|
-| *Шикоят* (Complaint) | `#FEE2E2` | `#991B1B` |
-| *Савол* (Question) | `#E0F2FE` | `#075985` |
-| *Эълон* (Announcement) | `#F3F4F6` | `#374151` |
-| *Ташаккур* (Praise) | `#DCFCE7` | `#166534` |
-
 ### Severity Ladder (Status indicators only)
 
 | State | Color | Usage |
@@ -66,7 +57,6 @@ Deliberately muted mid-tones that read clearly against the `#FAFAF9` container w
 | Card mahalla label | 12px | 400 | 1.4 | Mahalla name below sender |
 | Card timestamp | 11px | 400 | 1.4 | Relative time (e.g., "10 дақ. олдин") |
 | Card signal text | 13px | 400 | 1.5 | Raw message snippet (3-line clamp) |
-| Tone badge label | 11px | 500 | 1 | *Шикоят*, *Савол*, etc. |
 | Drawer heading | 14px | 600 | 1.4 | Breadcrumb: Lane · Mahalla · Time |
 | Drawer context card | 13px | 400 | 1.5 | Corroborating signal text |
 | Filter label | 13px | 500 | 1.4 | Filter bar control labels |
@@ -83,7 +73,7 @@ Deliberately muted mid-tones that read clearly against the `#FAFAF9` container w
 |---|---|---|
 | `space-1` | 4px | Minimum gap between inline elements |
 | `space-2` | 8px | Card internal padding (tight) |
-| `space-3` | 12px | Tone badge padding, filter chip padding |
+| `space-3` | 12px | Filter chip padding and compact inline metadata spacing |
 | `space-4` | 16px | Card standard padding, lane header padding |
 | `space-5` | 20px | Gap between cards within a lane |
 | `space-6` | 24px | Lane column horizontal padding |
@@ -111,7 +101,7 @@ Deliberately muted mid-tones that read clearly against the `#FAFAF9` container w
 │  │                                            │   │
 │  │ [Raw message text, 3-line clamp...]        │   │  ← 13px/400, 1.5 line-height
 │  │                                            │   │
-│  │ [● Tone Badge]  [★ if hokim-related]       │   │  ← 11px/500 flat pill
+│  │ [★ if hokim-related] [📷 if caption]       │   │  ← compact non-interactive indicators
 │  └──────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────┘
 Padding: 12px 16px. Background: #FFFFFF. Border-radius: 8px. Box-shadow: 0 1px 3px rgba(0,0,0,0.06).
@@ -124,7 +114,6 @@ Active: left-border → 4px solid categoryColor; background → categoryColor at
   - `#1A1714` on `#FAFAF9`: 18.2:1 ✅
   - `#6B6560` on `#FAFAF9`: 5.9:1 ✅
   - `#4F46A8` on `#FFFFFF`: 7.2:1 ✅
-  - All tone badge foreground/background pairs verified ≥4.5:1 ✅
 - **Focus indicators:** AntD's default focus ring preserved and enhanced (2px offset, `colorPrimary` outline) — not removed for aesthetics.
 - **Keyboard navigation:** Drawer closable via Escape; filter controls fully tab-navigable; signal cards assigned `tabIndex=0`.
 - **Font size floor:** No UI text falls below 11px to maintain legibility at standard 96dpi desktop scaling.
