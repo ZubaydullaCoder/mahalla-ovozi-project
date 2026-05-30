@@ -5,7 +5,6 @@
 | Component | AntD v5 | Usage in Mahalla Ovozi |
 |---|---|---|
 | `Drawer` | ✅ | Context evidence drawer overlay |
-| `Tag` | ✅ | Tone badges (*Шикоят*, *Савол*, etc.) |
 | `Badge` | ✅ | Lane signal count on lane headers |
 | `Skeleton` | ✅ | Initial load shimmer + drawer swap shimmer |
 | `Alert` | ✅ | Delay status banner (`type: "warning"`) |
@@ -85,7 +84,7 @@ The same `Signal` object is referenced (not copied) in both lanes. The `<SignalC
 
 ### `<SignalCard>`
 
-**Purpose:** The atomic unit of the dashboard. Displays one classified signal with metadata, tone badge, and active/default visual states. Triggers the drawer on click.
+**Purpose:** The atomic unit of the dashboard. Displays one classified signal with essential metadata and active/default visual states. Triggers the drawer on click.
 
 **Anatomy:**
 ```
@@ -97,7 +96,6 @@ The same `Signal` object is referenced (not copied) in both lanes. The `<SignalC
   ├── mahalla label (12px/400, colorTextSecondary)
   ├── message text (13px/400, 3-line clamp)
   └── card-footer
-       ├── ToneBadge (AntD Tag, non-interactive)
        ├── CaptionBadge (📷 icon, visible only if text_source = 'caption')
        └── HokimStar (★ icon, visible only if hokim_related=true)
 ```
@@ -144,7 +142,7 @@ interface SignalCardProps {
 - Text clamped to 3 lines. Full text shown only inside the context drawer.
 - Sender fallback chain: Display Name → `@username` → *Резидент*.
 - Timestamp: relative (*10 дақ. олдин*) for signals ≤24h old; absolute (`HH:MM`) for older signals.
-- **Caption source indicator:** If `signal.text_source === 'caption'`, the `CaptionBadge` (📷 icon, 11px, `colorTextPlaceholder`, `aria-label="Расм тавсифи"`) is shown in the card footer. It communicates that the text came from a photo caption, not a plain text message. It is non-interactive and carries no color — it must not compete visually with the ToneBadge. The full text is still displayed as normal; only the source provenance changes.
+- **Caption source indicator:** If `signal.text_source === 'caption'`, the `CaptionBadge` (📷 icon, 11px, `colorTextPlaceholder`, `aria-label="Расм тавсифи"`) is shown in the card footer. It communicates that the text came from a photo caption, not a plain text message. It is non-interactive and visually secondary. The full text is still displayed as normal; only the source provenance changes.
 - **No unspecified status indicators:** Signal cards must not display any visual indicators not defined in this spec (e.g. "unread" dots, colored circles, blinking states, or any icon not listed in the card anatomy above). Every visual element must have a defined meaning. Undefined indicators violate the *Zero Ambiguous States* principle.
 
 ## Drawer Card Rules
