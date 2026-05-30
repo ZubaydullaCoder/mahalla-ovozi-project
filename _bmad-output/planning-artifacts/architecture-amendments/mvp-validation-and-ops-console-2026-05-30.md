@@ -179,7 +179,6 @@ The initial Ops Console should include:
 4. Classifier Review
    - message text;
    - AI category;
-   - AI tone;
    - AI `hokim_related`;
    - expected values entered by developer/operator;
    - correct/wrong decision;
@@ -269,7 +268,6 @@ Implementation stories should consider these tables or equivalent structures:
 - `signal_message_id`
 - `raw_message_id`
 - `expected_category`
-- `expected_tone`
 - `expected_hokim_related`
 - `is_correct`
 - `note`
