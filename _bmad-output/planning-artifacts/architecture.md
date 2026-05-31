@@ -217,7 +217,7 @@ mahalla-ovozi/
 
 **Database:** PostgreSQL 16 via Docker Compose. Drizzle ORM v0.45.2 schema-as-code. Driver: `postgres.js`. Migrations: `npx drizzle-kit generate` + `npx drizzle-kit migrate`.
 
-**Drawer context scope:** `mahalla_id` вЂ” the drawer fetches all signals for `category = X AND mahalla_id = Y AND time_range`. This correctly aggregates across multiple Telegram groups belonging to the same mahalla. `telegram_chat_id` is used only for bot group routing, not for signal queries.
+**Drawer context scope:** `mahalla_id` вЂ” the drawer fetches all signals for `category = X AND mahalla_id = Y AND time_range`. MVP assumes exactly one monitored Telegram group per mahalla, so `mahalla_id` and the monitored Telegram group map one-to-one during MVP. Multi-group-per-mahalla support is deferred until real pilot usage proves it is needed. `telegram_chat_id` is used only for bot group routing, not for signal queries.
 
 **Two-stage discard model (important — these are distinct populations):**
 
@@ -342,8 +342,6 @@ export const signalMessages = pgTable('signal_messages', {
   category:            varchar('category', { length: 20 }).notNull(),
     // 'water' | 'electricity' | 'gas' | 'waste'
   hokim_related:       boolean('hokim_related').notNull().default(false),
-  tone:                varchar('tone', { length: 20 }).notNull(),
-    // 'complaint' | 'announcement' | 'praise' | 'question'
   short_label:         varchar('short_label', { length: 100 }),
   classified_at:       timestamp('classified_at').notNull(),
   created_at:          timestamp('created_at').notNull().defaultNow(),
@@ -355,6 +353,8 @@ export const signalMessages = pgTable('signal_messages', {
   idx_signal_messages_hokim:       index('idx_signal_messages_hokim_related').on(t.hokim_related),
 }));
 ```
+
+**Architecture Consistency Note:** Tone classification is intentionally out of MVP scope. The classifier must not infer tone values such as complaint, question, announcement, or praise. Tone badges and tone review are not part of the hokim-facing dashboard or Ops Console MVP.
 
 **Retention:** Signals older than 90 days are purged by a daily scheduled BullMQ job. See Infrastructure & Deployment section.
 
@@ -450,7 +450,6 @@ interface Signal {
   textSource:         'text' | 'caption';
   category:           'water' | 'electricity' | 'gas' | 'waste';
   hokimRelated:       boolean;
-  tone:               'complaint' | 'announcement' | 'praise' | 'question';
   shortLabel:         string | null;
   classifiedAt:       string;          // ISO 8601 UTC
 }
