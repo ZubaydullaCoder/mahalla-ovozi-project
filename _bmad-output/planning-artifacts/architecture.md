@@ -19,7 +19,6 @@ inputDocuments:
   - '_bmad-output/planning-artifacts/research/domain-mahalla-governance-research-2026-05-13.md'
   - '_bmad-output/planning-artifacts/research/technical-telegram-ai-pipeline-research-2026-05-13.md'
   - '_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-17.md'
-  - 'session-handoff.md'
   - 'user-client-preferences-log.md'
 workflowType: 'architecture'
 status: 'complete'

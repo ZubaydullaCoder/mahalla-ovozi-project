@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="uz" dir="ltr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Маҳалла Овози — Бошқарув Панели</title>
+  <meta name="description" content="Маҳалла Овози — ҳоким учун фуқаролар сигналларини кузатиш панели." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ========================================
+       DESIGN TOKENS
+       ======================================== */
+    :root {
+      /* Base Palette */
+      --color-bg-layout: #F5F4F2;
+      --color-bg-container: #FAFAF9;
+      --color-bg-elevated: #FFFFFF;
+      --color-border: #E8E5E1;
+      --color-border-secondary: #D1CEC9;
+      --color-text: #1A1714;
+      --color-text-secondary: #6B6560;
+      --color-text-placeholder: #A09990;
+      --color-primary: #4F46A8;
+      --color-primary-bg: #EEF0FD;
+      --color-warning: #D97706;
+      --color-warning-bg: #FFFBEB;
+
+      /* Category Colors */
+      --cat-hokim: #7C2D56;
+      --cat-suv: #1D6FA4;
+      --cat-elektr: #B45309;
+      --cat-gaz: #1A7060;
+      --cat-chiqindi: #5C6B2E;
+
+      /* Category bg tints (5% opacity equivalent) */
+      --cat-hokim-bg: #F9F3F6;
+      --cat-suv-bg: #F0F7FC;
+      --cat-elektr-bg: #FDF8F0;
+      --cat-gaz-bg: #F0F7F6;
+      --cat-chiqindi-bg: #F5F7F0;
+
+      /* Tone Badge Colors */
+      --tone-shikoyat-bg: #FEE2E2;
+      --tone-shikoyat-text: #991B1B;
+      --tone-savol-bg: #E0F2FE;
+      --tone-savol-text: #075985;
+      --tone-eylon-bg: #F3F4F6;
+      --tone-eylon-text: #374151;
+      --tone-tashakkur-bg: #DCFCE7;
+      --tone-tashakkur-text: #166534;
+
+      /* Spacing */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+
+      /* Shadows */
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.10);
+      --shadow-card-active: 0 2px 10px rgba(0, 0, 0, 0.12);
+      --shadow-drawer: -4px 0 24px rgba(0, 0, 0, 0.10);
+    }
+
+    /* ========================================
+       RESET & BASE
+       ======================================== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      min-width: 1024px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--color-text);
+      background: var(--color-bg-layout);
+      overflow: hidden;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    input {
+      font-family: inherit;
+    }
+
+    /* ========================================
+       APP SHELL
+       ======================================== */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========================================
+       FILTER BAR
+       ======================================== */
+    #filter-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      height: 56px;
+      min-height: 56px;
+      padding: 0 var(--space-6);
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border-secondary);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .filter-bar__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-text);
+      letter-spacing: -0.3px;
+      margin-right: var(--space-2);
+      white-space: nowrap;
+    }
+
+    .filter-bar__logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+    }
+
+    .filter-bar__divider {
+      width: 1px;
+      height: 20px;
+      background: var(--color-border-secondary);
+      flex-shrink: 0;
+    }
+
+    .filter-bar__label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-placeholder);
+      white-space: nowrap;
+    }
+
+    /* Time range chip group */
+    .chip-group {
+      display: flex;
+      gap: var(--space-1);
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: transparent;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .chip:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .chip.active {
+      border-color: var(--color-primary);
+      background: var(--color-primary-bg);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* Mahalla Select */
+    .filter-select {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .filter-select select {
+      appearance: none;
+      padding: 5px 28px 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: #FFFFFF;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+      min-width: 160px;
+    }
+
+    .filter-select select:hover,
+    .filter-select select:focus {
+      border-color: var(--color-primary);
+    }
+
+    .filter-select__arrow {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 10px;
+      color: var(--color-text-placeholder);
+    }
+
+    /* Search */
+    .filter-search {
+      position: relative;
+      flex: 1;
+      max-width: 240px;
+    }
+
+    .filter-search__icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--color-text-placeholder);
+    }
+
+    .filter-search input {
+      width: 100%;
+      padding: 5px 10px 5px 28px;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      background: #FFFFFF;
+      font-size: 12px;
+      color: var(--color-text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .filter-search input::placeholder {
+      color: var(--color-text-placeholder);
+    }
+
+    .filter-search input:focus {
+      border-color: var(--color-primary);
+    }
+
+    /* Spacer */
+    .filter-bar__spacer {
+      flex: 1;
+    }
+
+    /* Time display */
+    .filter-bar__time {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-placeholder);
+      white-space: nowrap;
+    }
+
+    /* ========================================
+       DELAY BANNER
+       ======================================== */
+    #delay-banner {
+      display: none;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 8px var(--space-6);
+      background: var(--color-warning-bg);
+      border-bottom: 1px solid #FDE68A;
+      font-size: 13px;
+      font-weight: 500;
+      color: #92400E;
+      flex-shrink: 0;
+    }
+
+    #delay-banner.visible {
+      display: flex;
+    }
+
+    /* ========================================
+       LANE GRID
+       ======================================== */
+    #lane-grid {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .lane-column {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--color-border);
+      background: var(--color-bg-container);
+      overflow: hidden;
+    }
+
+    .lane-column:last-child {
+      border-right: none;
+    }
+
+    /* Lane sticky header */
+    .lane-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 10px var(--space-4);
+      background: var(--color-bg-container);
+      border-bottom: 1px solid var(--color-border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .lane-header__accent {
+      width: 3px;
+      height: 16px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .lane-header__title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lane-header__badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    /* Lane body (scrollable) */
+    .lane-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3) var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border) transparent;
+    }
+
+    .lane-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .lane-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .lane-body::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 2px;
+    }
+
+    /* ========================================
+       SIGNAL CARD
+       ======================================== */
+    .signal-card {
+      position: relative;
+      background: var(--color-bg-elevated);
+      border-radius: 8px;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease, background 0.15s ease;
+      border-left: 4px solid transparent;
+      flex-shrink: 0;
+    }
+
+    .signal-card:hover {
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .signal-card.active {
+      box-shadow: var(--shadow-card-active);
+    }
+
+    .signal-card__inner {
+      padding: 10px 12px;
+    }
+
+    .signal-card__meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: 2px;
+    }
+
+    .signal-card__sender {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .signal-card__time {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--color-text-placeholder);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .signal-card__mahalla {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .signal-card__text {
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--color-text);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .signal-card__footer {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* Tone Badge */
+    .tone-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: default;
+    }
+
+    .tone-badge--shikoyat {
+      background: var(--tone-shikoyat-bg);
+      color: var(--tone-shikoyat-text);
+    }
+
+    .tone-badge--savol {
+      background: var(--tone-savol-bg);
+      color: var(--tone-savol-text);
+    }
+
+    .tone-badge--eylon {
+      background: var(--tone-eylon-bg);
+      color: var(--tone-eylon-text);
+    }
+
+    .tone-badge--tashakkur {
+      background: var(--tone-tashakkur-bg);
+      color: var(--tone-tashakkur-text);
+    }
+
+    .hokim-star {
+      font-size: 12px;
+      cursor: default;
+      opacity: 0.75;
+      color: var(--cat-hokim);
+    }
+
+    .caption-badge {
+      font-size: 11px;
+      cursor: default;
+      color: var(--color-text-placeholder);
+    }
+
+    /* ========================================
+       CONTEXT DRAWER
+       ======================================== */
+    #drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 12, 10, 0.06);
+      z-index: 150;
+      cursor: default;
+    }
+
+    #drawer-backdrop.visible {
+      display: block;
+    }
+
+    #context-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 380px;
+      background: var(--color-bg-container);
+      border-left: 1px solid var(--color-border-secondary);
+      box-shadow: var(--shadow-drawer);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 250ms ease-out;
+    }
+
+    #context-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px var(--space-4);
+      border-bottom: 1px solid var(--color-border-secondary);
+      background: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    .drawer-header__breadcrumb {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .drawer-header__breadcrumb span {
+      color: var(--color-text-secondary);
+      font-weight: 400;
+    }
+
+    .drawer-header__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      font-size: 16px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+
+    .drawer-header__close:hover {
+      background: var(--color-border);
+    }
+
+    .drawer-subheader {
+      padding: 8px var(--space-4);
+      background: var(--color-bg-container);
+      border-bottom: 1px solid var(--color-border);
+      font-size: 12px;
+      color: var(--color-text-placeholder);
+      flex-shrink: 0;
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border) transparent;
+    }
+
+    .drawer-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .drawer-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .drawer-body::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 2px;
+    }
+
+    /* Drawer Signal Card — same structure, full text (no clamp) */
+    .drawer-signal-card {
+      background: var(--color-bg-elevated);
+      border-radius: 8px;
+      border-left: 4px solid transparent;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .drawer-signal-card.anchor {
+      box-shadow: var(--shadow-card-active);
+    }
+
+    .drawer-signal-card__inner {
+      padding: 10px 12px;
+    }
+
+    .drawer-signal-card__meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-bottom: 2px;
+    }
+
+    .drawer-signal-card__sender {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .drawer-signal-card__time {
+      font-size: 11px;
+      color: var(--color-text-placeholder);
+    }
+
+    .drawer-signal-card__mahalla {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .drawer-signal-card__text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--color-text);
+      margin-bottom: 8px;
+    }
+
+    .drawer-signal-card__footer {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* Empty drawer state */
+    .drawer-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-6);
+      color: var(--color-text-placeholder);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .drawer-empty__icon {
+      font-size: 28px;
+      opacity: 0.35;
+    }
+
+    /* Skeleton shimmer */
+    @keyframes shimmer {
+      0% {
+        background-position: -468px 0;
+      }
+
+      100% {
+        background-position: 468px 0;
+      }
+    }
+
+    .skeleton {
+      background: linear-gradient(to right, #EDEAE6 8%, #E2DFD9 18%, #EDEAE6 33%);
+      background-size: 800px 104px;
+      animation: shimmer 1.4s linear infinite;
+      border-radius: 4px;
+    }
+
+    .skeleton-card {
+      background: var(--color-bg-elevated);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow-card);
+      border-left: 4px solid var(--color-border);
+    }
+
+    .skeleton-line {
+      height: 10px;
+      margin-bottom: 6px;
+    }
+
+    .skeleton-line--sm {
+      width: 60%;
+    }
+
+    .skeleton-line--md {
+      width: 80%;
+    }
+
+    .skeleton-line--lg {
+      width: 95%;
+    }
+
+    .skeleton-line--full {
+      width: 100%;
+    }
+
+    /* ========================================
+       EMPTY LANE STATE
+       ======================================== */
+    .lane-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: var(--space-6) var(--space-4);
+      color: var(--color-text-placeholder);
+      font-size: 12px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .lane-empty__icon {
+      font-size: 28px;
+      opacity: 0.35;
+    }
+
+    /* ========================================
+       TOOLTIP (for long names)
+       ======================================== */
+    [data-tooltip] {
+      position: relative;
+    }
+
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-text);
+      color: #FFF;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    /* ========================================
+       SCROLLBAR (global thin)
+       ======================================== */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-border-secondary);
+      border-radius: 2px;
+    }
+
+    /* ========================================
+       FOCUS RING (accessibility)
+       ======================================== */
+    .signal-card:focus-visible,
+    .drawer-signal-card:focus-visible,
+    .chip:focus-visible,
+    .drawer-header__close:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- ==================== FILTER BAR ==================== -->
+    <header id="filter-bar" role="banner">
+      <!-- Logo / Branding -->
+      <div class="filter-bar__logo">
+        <div class="filter-bar__logo-dot"></div>
+        Маҳалла Овози
+      </div>
+
+      <div class="filter-bar__divider"></div>
+
+      <!-- Time Range Label -->
+      <span class="filter-bar__label">Вақт оралиғи:</span>
+
+      <!-- Time Preset Chips -->
+      <div class="chip-group" role="group" aria-label="Вақт оралиғи чиплари">
+        <button class="chip" id="chip-1soat" onclick="setChip(this, '1soat')">1 соат</button>
+        <button class="chip" id="chip-3soat" onclick="setChip(this, '3soat')">3 соат</button>
+        <button class="chip active" id="chip-6soat" onclick="setChip(this, '6soat')">6 соат</button>
+        <button class="chip" id="chip-bugun" onclick="setChip(this, 'bugun')">Бугун</button>
+        <button class="chip" id="chip-kecha" onclick="setChip(this, 'kecha')">Кеча</button>
+        <button class="chip" id="chip-7kun" onclick="setChip(this, '7kun')">7 кун</button>
+      </div>
+
+      <div class="filter-bar__divider"></div>
+
+      <!-- Mahalla Filter -->
+      <div class="filter-select">
+        <select id="mahalla-filter" aria-label="Маҳалла фильтри" onchange="filterMahalla(this.value)">
+          <option value="">Барча маҳаллалар</option>
+          <option value="navbahor">Навбаҳор маҳалласи</option>
+          <option value="olmazor">Олмазор маҳалласи</option>
+          <option value="gulshan">Гулшан маҳалласи</option>
+          <option value="yulduz">Юлдуз маҳалласи</option>
+          <option value="bahor">Баҳор маҳалласи</option>
+        </select>
+        <span class="filter-select__arrow">▾</span>
+      </div>
+
+      <!-- Search -->
+      <div class="filter-search">
+        <span class="filter-search__icon">🔍</span>
+        <input type="search" id="keyword-search" placeholder="Қидириш..." aria-label="Сигналларни қидириш"
+          oninput="filterSearch(this.value)" />
+      </div>
+
+      <div class="filter-bar__spacer"></div>
+
+      <!-- Live time -->
+      <span class="filter-bar__time" id="live-time">21 май, 19:44</span>
+    </header>
+
+    <!-- ==================== DELAY BANNER ==================== -->
+    <div id="delay-banner" role="status" aria-live="polite">
+      ⚠️ Сигналлар янгиланмаяпти — охирги янгиланиш 19:20
+    </div>
+
+    <!-- ==================== LANE GRID ==================== -->
+    <main id="lane-grid" role="main" aria-label="Сигналлар панели">
+
+      <!-- ── LANE 1: Ҳокимга тегишли ── -->
+      <section class="lane-column" id="lane-hokim" role="feed" aria-label="Ҳокимга тегишли">
+        <div class="lane-header">
+          <div class="lane-header__accent" style="background: var(--cat-hokim);"></div>
+          <span class="lane-header__title">Ҳокимга тегишли</span>
+          <span class="lane-header__badge" style="background: var(--cat-hokim);">5</span>
+        </div>
+        <div class="lane-body" id="body-hokim"></div>
+      </section>
+
+      <!-- ── LANE 2: Сув ── -->
+      <section class="lane-column" id="lane-suv" role="feed" aria-label="Сув">
+        <div class="lane-header">
+          <div class="lane-header__accent" style="background: var(--cat-suv);"></div>
+          <span class="lane-header__title">Сув</span>
+          <span class="lane-header__badge" style="background: var(--cat-suv);">7</span>
+        </div>
+        <div class="lane-body" id="body-suv"></div>
+      </section>
+
+      <!-- ── LANE 3: Электр ── -->
+      <section class="lane-column" id="lane-elektr" role="feed" aria-label="Электр">
+        <div class="lane-header">
+          <div class="lane-header__accent" style="background: var(--cat-elektr);"></div>
+          <span class="lane-header__title">Электр</span>
+          <span class="lane-header__badge" style="background: var(--cat-elektr);">9</span>
+        </div>
+        <div class="lane-body" id="body-elektr"></div>
+      </section>
+
+      <!-- ── LANE 4: Газ ── -->
+      <section class="lane-column" id="lane-gaz" role="feed" aria-label="Газ">
+        <div class="lane-header">
+          <div class="lane-header__accent" style="background: var(--cat-gaz);"></div>
+          <span class="lane-header__title">Газ</span>
+          <span class="lane-header__badge" style="background: var(--cat-gaz);">4</span>
+        </div>
+        <div class="lane-body" id="body-gaz"></div>
+      </section>
+
+      <!-- ── LANE 5: Чиқинди ── -->
+      <section class="lane-column" id="lane-chiqindi" role="feed" aria-label="Чиқинди">
+        <div class="lane-header">
+          <div class="lane-header__accent" style="background: var(--cat-chiqindi);"></div>
+          <span class="lane-header__title">Чиқинди</span>
+          <span class="lane-header__badge" style="background: var(--cat-chiqindi);">3</span>
+        </div>
+        <div class="lane-body" id="body-chiqindi"></div>
+      </section>
+
+    </main>
+
+    <!-- ==================== DRAWER BACKDROP ==================== -->
+    <div id="drawer-backdrop" onclick="closeDrawer()"></div>
+
+    <!-- ==================== CONTEXT DRAWER ==================== -->
+    <aside id="context-drawer" role="complementary" aria-label="Контекст ойнаси">
+      <div class="drawer-header">
+        <div class="drawer-header__breadcrumb" id="drawer-breadcrumb">
+          Сув · <span>Олмазор маҳалласи</span> · <span>09:15</span>
+        </div>
+        <button class="drawer-header__close" onclick="closeDrawer()" aria-label="Ёпиш" tabindex="0">✕</button>
+      </div>
+      <div class="drawer-subheader" id="drawer-subheader">6 соат оралиғида</div>
+      <div class="drawer-body" id="drawer-body"></div>
+    </aside>
+
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    /* ===================================================
+       MOCK DATA — All Uzbek Cyrillic, spec-accurate
+       =================================================== */
+    const SIGNALS = [
+      /* ── SUV (Water) ── */
+      {
+        id: 's01', category: 'suv', hokim_related: false,
+        sender: 'Дилноза Юсупова', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '08:42', timeRel: '10 соат 22 дақ. олдин',
+        text: 'Ҳурматли ҳоким, биз маҳалламизда 3 кундан бери сув йўқ. Болаларимиз мактабга кира олмаяпти. Зудлик билан ёрдам керак.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 's02', category: 'suv', hokim_related: false,
+        sender: '@murod_tashkentiy', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '09:05', timeRel: '10 соат олдин',
+        text: 'Олмазорда сув муаммоси ҳал бўлмаяпти. Кеча ҳам бугун ҳам сув йўқ эди.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 's03', category: 'suv', hokim_related: false,
+        sender: 'Нодирбек Холматов', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
+        time: '09:15', timeRel: '9 соат 49 дақ. олдин',
+        text: 'Сув тўсатдан узилди, трубани кўрсак сув ўтмаяпти. Коммунал хизматга қўнғироқ қилдик — жавоб йўқ.',
+        tone: 'savol', text_source: 'text'
+      },
+      {
+        id: 's04', category: 'suv', hokim_related: false,
+        sender: 'Зулфия Раҳимова', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
+        time: '11:30', timeRel: '7 соат 34 дақ. олдин',
+        text: 'Сувимиз рангли чиқяпти, ичишга ярамайди. Буни ким текшириши мумкин?',
+        tone: 'savol', text_source: 'caption', caption_text: 'сув ранги'
+      },
+      {
+        id: 's05', category: 'suv', hokim_related: true,
+        sender: 'Бекзод Мирзаев', mahalla: 'Юлдуз маҳалласи', mahalla_id: 'yulduz',
+        time: '14:10', timeRel: '5 соат 34 дақ. олдин',
+        text: 'Ҳоким жаноблари, биз маҳалламиздаги сув насосхонаси 2 кундан бери ишламаяпти. 400 хонадон зарар кўрмоқда.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 's06', category: 'suv', hokim_related: false,
+        sender: 'Резидент', mahalla: 'Баҳор маҳалласи', mahalla_id: 'bahor',
+        time: '16:20', timeRel: '3 соат 24 дақ. олдин',
+        text: 'Баҳор маҳалласида сув таъминоти яхшиланди. Раҳмат коммунал хизматга!',
+        tone: 'tashakkur', text_source: 'text'
+      },
+      {
+        id: 's07', category: 'suv', hokim_related: false,
+        sender: 'Малика Эшматова', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
+        time: '17:45', timeRel: '1 соат 59 дақ. олдин',
+        text: 'Навбаҳорда сув қачон тикланади? Кечдан бери сув йўқ. Яна бугун ёлворамиз.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+
+      /* ── ELEKTR (Electricity) ── */
+      {
+        id: 'e01', category: 'elektr', hokim_related: false,
+        sender: 'Санжар Турсунов', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '07:30', timeRel: '11 соат 34 дақ. олдин',
+        text: 'Олмазорда кечадан бери свет йўқ. Музлаткичлардаги маҳсулотлар бузилмоқда.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'e02', category: 'elektr', hokim_related: false,
+        sender: 'Нилуфар Хасанова', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '07:58', timeRel: '11 соат 6 дақ. олдин',
+        text: 'Электр узилмоқда. Болаларим уйда, ҳаво иссиқ, кондиционер ишламаяпти.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'e03', category: 'elektr', hokim_related: false,
+        sender: '@olmazor_chat', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '08:15', timeRel: '10 соат 49 дақ. олдин',
+        text: 'Умуман Олмазор кўчасида трансформатор ёнган. Ремонт қачон бошланади?',
+        tone: 'savol', text_source: 'caption'
+      },
+      {
+        id: 'e04', category: 'elektr', hokim_related: true,
+        sender: 'Ҳамид Расулов', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '09:30', timeRel: '9 соат 34 дақ. олдин',
+        text: 'Ҳоким жаноблари, Олмазор маҳалласида трансформатор 12 соатдан бери ишламаяпти. Зудлик билан чора кўрилсин!',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'e05', category: 'elektr', hokim_related: false,
+        sender: 'Умида Сафарова', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
+        time: '12:00', timeRel: '7 соат 4 дақ. олдин',
+        text: 'Гулшанда электр кесилиши кам бўляпти, яхши. Шу ҳолатда давом этсин.',
+        tone: 'tashakkur', text_source: 'text'
+      },
+      {
+        id: 'e06', category: 'elektr', hokim_related: false,
+        sender: 'Жасур Қодиров', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
+        time: '14:45', timeRel: '4 соат 19 дақ. олдин',
+        text: 'Навбаҳорда электр 5 марта кесилди бугун. Ишхонамда компьютерлар бузиляпти.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'e07', category: 'elektr', hokim_related: false,
+        sender: 'Камола Азимова', mahalla: 'Юлдуз маҳалласи', mahalla_id: 'yulduz',
+        time: '16:00', timeRel: '3 соат 4 дақ. олдин',
+        text: 'Юлдуз маҳалласида электр графикда берилмаяпти. Жадвалда 6 соат деган эди, аммо 9 соат кесилди.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'e08', category: 'elektr', hokim_related: false,
+        sender: 'Резидент', mahalla: 'Баҳор маҳалласи', mahalla_id: 'bahor',
+        time: '17:10', timeRel: '2 соат 34 дақ. олдин',
+        text: 'Баҳор маҳалласида электр муаммолари ҳақида нима ахборот бор? Кўчанинг ярми қоронғи.',
+        tone: 'savol', text_source: 'text'
+      },
+      {
+        id: 'e09', category: 'elektr', hokim_related: false,
+        sender: 'Отабек Норов', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
+        time: '18:50', timeRel: '53 дақ. олдин',
+        text: 'Энди электр тикланди! Барча қўшниларга хабар бердик. Рахмат электр хизматига.',
+        tone: 'tashakkur', text_source: 'text'
+      },
+
+      /* ── GAZ (Gas) ── */
+      {
+        id: 'g01', category: 'gaz', hokim_related: false,
+        sender: 'Феруза Мусаева', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
+        time: '10:20', timeRel: '8 соат 44 дақ. олдин',
+        text: 'Газ қочяпти деган ҳид сезиляпти уйимизда. Қўшниларда ҳам шундай. Хавфли!',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'g02', category: 'gaz', hokim_related: true,
+        sender: 'Дониёр Мирзаев', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
+        time: '10:45', timeRel: '8 соат 19 дақ. олдин',
+        text: 'Ҳоким жаноблари, Навбаҳорда газ чиқиши жиддий муаммо. Зудлик билан газ хизматини чорланг.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'g03', category: 'gaz', hokim_related: false,
+        sender: 'Шаҳло Тоштемирова', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
+        time: '13:30', timeRel: '5 соат 34 дақ. олдин',
+        text: 'Газ плитам ёқмаяпти. Газ борми умуман? Бошқаларда ҳам шундайми?',
+        tone: 'savol', text_source: 'text'
+      },
+      {
+        id: 'g04', category: 'gaz', hokim_related: false,
+        sender: 'Рустам Алимов', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
+        time: '15:00', timeRel: '4 соат 4 дақ. олдин',
+        text: 'Газ таъминоти яхши, бизда ҳеч қандай муаммо йўқ. Миннатдорчилик билдирамиз.',
+        tone: 'tashakkur', text_source: 'text'
+      },
+
+      /* ── CHIQINDI (Waste) ── */
+      {
+        id: 'c01', category: 'chiqindi', hokim_related: false,
+        sender: 'Азиза Ниёзова', mahalla: 'Юлдуз маҳалласи', mahalla_id: 'yulduz',
+        time: '08:00', timeRel: '11 соат 4 дақ. олдин',
+        text: 'Чиқиндиларни 5 кундан бери олиб кетишмаяпти. Кўча ёқасида уйилиб қолди, ҳид чиқяпти.',
+        tone: 'shikoyat', text_source: 'text'
+      },
+      {
+        id: 'c02', category: 'chiqindi', hokim_related: false,
+        sender: 'Бобур Йўлдошев', mahalla: 'Баҳор маҳалласи', mahalla_id: 'bahor',
+        time: '11:00', timeRel: '8 соат 4 дақ. олдин',
+        text: 'Чиқинди контейнерлари тўлиб кетган, ёнбошга ташланяпти. Санитария вазиятни текшириш керак.',
+        tone: 'shikoyat', text_source: 'caption'
+      },
+      {
+        id: 'c03', category: 'chiqindi', hokim_related: false,
+        sender: 'Моҳира Каримова', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
+        time: '13:00', timeRel: '6 соат 4 дақ. олдин',
+        text: 'Бугун чиқиндиларни вақтида олиб кетишди. Эълон қилган жадваллари ишлаяпти, яхши.',
+        tone: 'tashakkur', text_source: 'text'
+      },
+    ];
+
+    /* Hokim lane = all hokim_related signals */
+    const HOKIM_SIGNALS = SIGNALS.filter(s => s.hokim_related);
+
+    /* Category map for color tokens */
+    const CAT_COLORS = {
+      suv: { color: '#1D6FA4', bg: '#F0F7FC' },
+      elektr: { color: '#B45309', bg: '#FDF8F0' },
+      gaz: { color: '#1A7060', bg: '#F0F7F6' },
+      chiqindi: { color: '#5C6B2E', bg: '#F5F7F0' },
+      hokim: { color: '#7C2D56', bg: '#F9F3F6' }, /* hokim lane uses service color per spec */
+    };
+
+    function getCatStyle(category) {
+      return CAT_COLORS[category] || CAT_COLORS.suv;
+    }
+
+    /* ===================================================
+       TONE BADGE RENDERER
+       =================================================== */
+    function toneBadgeHTML(tone) {
+      const map = {
+        shikoyat: { cls: 'shikoyat', label: 'Шикоят' },
+        savol: { cls: 'savol', label: 'Савол' },
+        eylon: { cls: 'eylon', label: 'Эълон' },
+        tashakkur: { cls: 'tashakkur', label: 'Ташаккур' },
+      };
+      const t = map[tone] || map.eylon;
+      return `<span class="tone-badge tone-badge--${t.cls}">${t.label}</span>`;
+    }
+
+    /* ===================================================
+       SIGNAL CARD HTML (lane version — 3-line clamp)
+       =================================================== */
+    function signalCardHTML(signal, laneCategory, isActive) {
+      /* Per spec: left border color = ALWAYS the signal's SERVICE category color,
+         even when rendered in the Hokim lane */
+      const cat = getCatStyle(signal.category);
+      const activeClass = isActive ? 'active' : '';
+      const activeBg = isActive ? `background: ${cat.bg};` : '';
+      const hokimStar = signal.hokim_related ? `<span class="hokim-star" title="Ҳокимга тегишли">★</span>` : '';
+      const captionBadge = signal.text_source === 'caption' ? `<span class="caption-badge" title="Расм тавсифи">📷</span>` : '';
+
+      return `
+    <article
+      class="signal-card ${activeClass}"
+      id="card-${signal.id}"
+      tabindex="0"
+      role="article"
+      aria-label="${signal.sender}, ${signal.mahalla}, ${signal.timeRel}"
+      style="border-left-color: ${cat.color}; ${activeBg}"
+      onclick="openDrawer('${signal.id}', '${laneCategory}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){openDrawer('${signal.id}','${laneCategory}')}"
+    >
+      <div class="signal-card__inner">
+        <div class="signal-card__meta">
+          <span class="signal-card__sender">${signal.sender}</span>
+          <span class="signal-card__time">${signal.time}</span>
+        </div>
+        <div class="signal-card__mahalla">${signal.mahalla}</div>
+        <div class="signal-card__text">${signal.text}</div>
+        <div class="signal-card__footer">
+          ${toneBadgeHTML(signal.tone)}
+          ${captionBadge}
+          ${hokimStar}
+        </div>
+      </div>
+    </article>
+  `;
+    }
+
+    /* ===================================================
+       DRAWER SIGNAL CARD HTML (full text, no clamp)
+       =================================================== */
+    function drawerCardHTML(signal, isAnchor) {
+      const cat = getCatStyle(signal.category);
+      const anchorClass = isAnchor ? 'anchor' : '';
+      const anchorBg = isAnchor ? `background: ${cat.bg};` : '';
+      const captionBadge = signal.text_source === 'caption' ? `<span class="caption-badge" title="Расм тавсифи">📷</span>` : '';
+      const hokimStar = signal.hokim_related ? `<span class="hokim-star">★</span>` : '';
+
+      return `
+    <div
+      class="drawer-signal-card ${anchorClass}"
+      id="drawer-card-${signal.id}"
+      style="border-left-color: ${cat.color}; ${anchorBg}"
+    >
+      <div class="drawer-signal-card__inner">
+        <div class="drawer-signal-card__meta">
+          <span class="drawer-signal-card__sender">${signal.sender}</span>
+          <span class="drawer-signal-card__time">${signal.time}</span>
+        </div>
+        <div class="drawer-signal-card__mahalla">${signal.mahalla}</div>
+        <div class="drawer-signal-card__text">${signal.text}</div>
+        <div class="drawer-signal-card__footer">
+          ${toneBadgeHTML(signal.tone)}
+          ${captionBadge}
+          ${hokimStar}
+        </div>
+      </div>
+    </div>
+  `;
+    }
+
+    /* ===================================================
+       RENDER LANES
+       =================================================== */
+    let activeSignalId = null;
+    let activeLaneCat = null;
+    let currentMahalla = '';
+    let currentKeyword = '';
+
+    function renderLane(containerId, signals, laneCategory) {
+      const el = document.getElementById(containerId);
+      if (!signals || signals.length === 0) {
+        el.innerHTML = `
+      <div class="lane-empty">
+        <div class="lane-empty__icon">🗂</div>
+        <div>Бугун сигналлар йўқ</div>
+      </div>`;
+        return;
+      }
+      el.innerHTML = signals.map(s => signalCardHTML(s, laneCategory, s.id === activeSignalId)).join('');
+    }
+
+    function getFilteredSignals(signals) {
+      let result = signals;
+      if (currentMahalla) {
+        result = result.filter(s => s.mahalla_id === currentMahalla);
+      }
+      if (currentKeyword) {
+        const kw = currentKeyword.toLowerCase();
+        result = result.filter(s =>
+          s.text.toLowerCase().includes(kw) ||
+          s.sender.toLowerCase().includes(kw) ||
+          s.mahalla.toLowerCase().includes(kw)
+        );
+      }
+      return result;
+    }
+
+    function renderAllLanes() {
+      const byCategory = {
+        hokim: getFilteredSignals(HOKIM_SIGNALS),
+        suv: getFilteredSignals(SIGNALS.filter(s => s.category === 'suv')),
+        elektr: getFilteredSignals(SIGNALS.filter(s => s.category === 'elektr')),
+        gaz: getFilteredSignals(SIGNALS.filter(s => s.category === 'gaz')),
+        chiqindi: getFilteredSignals(SIGNALS.filter(s => s.category === 'chiqindi')),
+      };
+
+      renderLane('body-hokim', byCategory.hokim, 'hokim');
+      renderLane('body-suv', byCategory.suv, 'suv');
+      renderLane('body-elektr', byCategory.elektr, 'elektr');
+      renderLane('body-gaz', byCategory.gaz, 'gaz');
+      renderLane('body-chiqindi', byCategory.chiqindi, 'chiqindi');
+
+      /* Update lane header badges */
+      updateBadge('lane-hokim', byCategory.hokim.length);
+      updateBadge('lane-suv', byCategory.suv.length);
+      updateBadge('lane-elektr', byCategory.elektr.length);
+      updateBadge('lane-gaz', byCategory.gaz.length);
+      updateBadge('lane-chiqindi', byCategory.chiqindi.length);
+    }
+
+    function updateBadge(laneId, count) {
+      const badge = document.querySelector(`#${laneId} .lane-header__badge`);
+      if (badge) badge.textContent = count;
+    }
+
+    /* ===================================================
+       DRAWER LOGIC
+       =================================================== */
+    function openDrawer(signalId, laneCategory) {
+      const signal = SIGNALS.find(s => s.id === signalId) || HOKIM_SIGNALS.find(s => s.id === signalId);
+      if (!signal) return;
+
+      /* Update active state */
+      activeSignalId = signalId;
+      activeLaneCat = laneCategory;
+      renderAllLanes();
+
+      /* Breadcrumb — per spec: if clicked from Hokim lane, show SERVICE category, not "Ҳокимга тегишли" */
+      const catNameMap = {
+        suv: 'Сув', elektr: 'Электр', gaz: 'Газ', chiqindi: 'Чиқинди', hokim: 'Ҳокимга тегишли'
+      };
+      const breadcrumbCat = laneCategory === 'hokim' ? catNameMap[signal.category] : catNameMap[laneCategory];
+      document.getElementById('drawer-breadcrumb').innerHTML =
+        `<strong>${breadcrumbCat}</strong> · <span>${signal.mahalla}</span> · <span>${signal.time}</span>`;
+
+      /* Subheader */
+      const chipActive = document.querySelector('.chip.active');
+      const chipLabel = chipActive ? chipActive.textContent : '6 соат';
+      document.getElementById('drawer-subheader').textContent = `${chipLabel} оралиғида`;
+
+      /* Context signals: same category + same mahalla, ascending time order */
+      const contextCategory = laneCategory === 'hokim' ? null : laneCategory;
+      let contextSignals = SIGNALS.filter(s => {
+        if (contextCategory) return s.category === contextCategory && s.mahalla_id === signal.mahalla_id;
+        return s.hokim_related && s.mahalla_id === signal.mahalla_id;
+      }).sort((a, b) => a.time.localeCompare(b.time));
+
+      /* Render drawer body — anchor centered */
+      const drawerBody = document.getElementById('drawer-body');
+      if (contextSignals.length === 0) {
+        drawerBody.innerHTML = `
+      <div class="drawer-empty">
+        <div class="drawer-empty__icon">○</div>
+        <div>Бу маҳаллада бошқа сигналлар топилмади</div>
+      </div>`;
+      } else {
+        drawerBody.innerHTML = contextSignals.map(cs => drawerCardHTML(cs, cs.id === signalId)).join('');
+        /* Scroll anchor card to vertical center */
+        requestAnimationFrame(() => {
+          const anchorEl = document.getElementById(`drawer-card-${signalId}`);
+          if (anchorEl) {
+            const bodyEl = drawerBody;
+            const anchorTop = anchorEl.offsetTop;
+            const anchorHeight = anchorEl.offsetHeight;
+            const bodyHeight = bodyEl.clientHeight;
+            bodyEl.scrollTop = anchorTop - (bodyHeight / 2) + (anchorHeight / 2);
+          }
+        });
+      }
+
+      /* Show drawer */
+      document.getElementById('drawer-backdrop').classList.add('visible');
+      document.getElementById('context-drawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer-backdrop').classList.remove('visible');
+      document.getElementById('context-drawer').classList.remove('open');
+      activeSignalId = null;
+      activeLaneCat = null;
+      renderAllLanes();
+    }
+
+    /* Close on Escape */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeDrawer();
+    });
+
+    /* ===================================================
+       FILTER CONTROLS
+       =================================================== */
+    function setChip(el, key) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      /* In a real app, keys 'kecha' / '7kun' would trigger an API call with skeleton */
+      renderAllLanes();
+    }
+
+    function filterMahalla(value) {
+      currentMahalla = value;
+      renderAllLanes();
+    }
+
+    function filterSearch(value) {
+      currentKeyword = value;
+      renderAllLanes();
+    }
+
+    /* ===================================================
+       LIVE TIME
+       =================================================== */
+    function updateTime() {
+      const now = new Date();
+      const day = now.getDate();
+      const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+      const mon = months[now.getMonth()];
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('live-time').textContent = `${day} ${mon}, ${hh}:${mm}`;
+    }
+    updateTime();
+    setInterval(updateTime, 30000);
+
+    /* ===================================================
+       DELAY BANNER DEMO (toggle with 'D' key)
+       =================================================== */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'd' || e.key === 'D') {
+        document.getElementById('delay-banner').classList.toggle('visible');
+      }
+    });
+
+    /* ===================================================
+       INITIAL RENDER
+       =================================================== */
+    renderAllLanes();
+  </script>
+</body>
+
+</html>
