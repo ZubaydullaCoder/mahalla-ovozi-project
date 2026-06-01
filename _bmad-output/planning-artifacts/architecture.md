@@ -1,420 +1,589 @@
----
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
-inputDocuments:
-  - '_bmad-output/planning-artifacts/prd.md'
-  - '_bmad-output/planning-artifacts/prd-validation-report-2026-05-18.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/index.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/executive-summary.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/core-user-experience.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/desired-emotional-response.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/ux-pattern-analysis-inspiration.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/design-system-foundation.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/defining-core-experience.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/visual-design-foundation.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/design-direction-decision.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/user-journey-flows.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/component-strategy.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/ux-consistency-patterns.md'
-  - '_bmad-output/planning-artifacts/ux-design-specification/responsive-design-accessibility.md'
-  - '_bmad-output/planning-artifacts/research/domain-mahalla-governance-research-2026-05-13.md'
-  - '_bmad-output/planning-artifacts/research/technical-telegram-ai-pipeline-research-2026-05-13.md'
-  - '_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-17.md'
-  - 'user-client-preferences-log.md'
-workflowType: 'architecture'
-status: 'complete'
-lastStep: 8
-completedAt: '2026-05-22'
-project_name: 'mahalla-ovozi'
-user_name: 'Zubaydulla'
-date: '2026-05-22'
----
+# Architecture Decision Document — Mahalla Ovozi (Phase 1)
 
-# Architecture Decision Document
-
-_This document builds collaboratively through step-by-step discovery. Sections are appended as we work through each architectural decision together._
+**Project:** mahalla-ovozi
+**Author:** Zubaydulla
+**Date:** 2026-06-01
+**Phase:** 1 — Validation-First Development
 
 ---
 
-## Project Context Analysis
+## 1. Project Context Analysis
 
 ### Requirements Overview
 
-**Functional Requirements (34 total):**
-Seven groups: Signal Display (FR1вЂ“6), Context Drawer (FR7вЂ“10), Filtering & Search (FR11вЂ“15), Message Intake (FR16вЂ“19), AI Classification Pipeline (FR20вЂ“25), Signal Storage (FR26вЂ“28), Access & Authentication (FR29вЂ“32), Operational Health (FR33вЂ“34). All 34 FRs have zero epic coverage at this stage вЂ” architecture must enable story decomposition.
+**Functional Requirements (34 total, tone fields removed):**
+
+Seven groups: Signal Display (FR1–6), Context Drawer (FR7–10), Filtering & Search (FR11–15),
+Message Intake (FR16–19), AI Classification Pipeline (FR20–25), Signal Storage (FR26–28),
+Access & Authentication (FR29–32), Operational Health (FR33–34).
 
 **Non-Functional Requirements (15 total):**
-Performance: 3s initial load, 300ms client ops, 500ms drawer open, 60s background poll. Security: HTTPS only, httpOnly/secure session cookies, env-only secrets, webhook validation, disk encryption. Reliability: 99% webhook uptime, 3-retry AI recovery, daily backup, idempotent pipeline. Scalability: 5 groups + 1,000 msg/day pilot load, no architectural changes needed.
 
-**Scale & Complexity:**
-High complexity вЂ” dual-process runtime (web + worker), two external integrations (Telegram + AI), stateful async pipeline, strict client/server data boundary contract, WCAG 2.1 AA target, Uzbek Cyrillic enforcement, district-scoped multi-user auth.
+Performance: 3s initial load, 300ms client ops, 500ms drawer open, 60s background poll.
+Security: HTTPS only (Phase 2), httpOnly/secure session cookies, env-only secrets, webhook validation.
+Reliability: 99% webhook uptime (Phase 2 target), AI retry recovery, daily backup (Phase 2), idempotent pipeline.
+Scalability: 5 groups + 1,000 msg/day pilot load — no architectural changes required.
 
-- Primary domain: Full-stack TypeScript (bot intake + async worker + REST API + React SPA)
+**Tone classification is removed from MVP scope entirely:**
+- No tone classifier output
+- No tone database fields
+- No tone API fields
+- No tone badges in UI
+- No tone-related tests, stories, or UI components
+- Rationale: tone is subjective, adds AI error risk, and the hokim can understand tone by reading raw message text directly.
+
+### Scale & Complexity
+
+High complexity — dual-concern server (API + bot intake), AI classification pipeline, async scheduled
+processing, Uzbek NLP, district-scoped multi-user auth, Developer Ops Console.
+
+- Primary domain: Full-stack TypeScript (bot intake + Express REST API + React SPA + Ops Console)
 - Complexity level: High
-- Estimated architectural components: 7 modules (bot, classifier, signals, auth, health, shared, web)
+- Estimated modules: 7 (bot, classifier, signals, auth, health, shared, ops)
 
-### Technical Constraints & Dependencies
+### Technical Constraints & Dependencies (Phase 1)
 
-- grammY + Telegram webhook (production); ngrok/tunnel for local development
-- `@google/genai` SDK only; exact syntax must be verified during implementation
-- Ant Design v5 with ConfigProvider tokens; no Tailwind
-- `@tanstack/react-virtual` for lane virtualization (>50 cards threshold)
-- Drizzle ORM; PostgreSQL schema-as-code
-- Zod for all runtime validation (AI output, API inputs, env config)
-- Session auth via secure httpOnly cookies; PostgreSQL-backed session store
-- Single VPS: Docker Compose, Nginx + Let's Encrypt, Redis + PostgreSQL colocated
-- BullMQ scheduler API version must be verified during package selection
-- AI model/provider: configurable via env; provisionally Gemini-family
+- grammY (current stable) — `webhookCallback(bot, "express", { secretToken })` for Express integration
+- `@google/genai` SDK — `ai.models.generateContent()` with `responseSchema: z.toJSONSchema(schema)`
+- Ant Design v6.x with ConfigProvider tokens; no Tailwind
+- `@tanstack/react-virtual` — lane virtualization (>50 cards threshold)
+- Prisma v7.8.0 — PostgreSQL schema management, migrations, BigInt support; requires `@prisma/adapter-pg`
+- Zod v4 — runtime validation; `z.toJSONSchema(schema)` module-level function for AI schema
+- express-session + connect-pg-simple — PostgreSQL-backed session store (no Redis in Phase 1)
+- node-cron v4.x — in-process scheduler (no BullMQ/Redis in Phase 1)
+- AI model: configurable Gemini model via `AI_MODEL` env var (Google AI only in Phase 1)
 - Pre-filter thresholds: provisional until real-data validation
 
-### Cross-Cutting Concerns Identified
+### Cross-Cutting Concerns
 
-1. **District-scoped data isolation** вЂ” middleware guard on all API routes
-2. **Pre-filter pipeline centralization** вЂ” `src/bot/filters/pipeline.ts` only
-3. **Uzbek Cyrillic string enforcement** вЂ” typed `strings.ts` dictionary + lint check
-4. **Health state propagation** вЂ” `batch_health` в†’ `/api/health` в†’ 60s poll в†’ amber banner
-5. **Idempotency** вЂ” `telegram_update_id` UNIQUE constraint; idempotent batch worker
-6. **Security secrets** вЂ” four env-only secrets; webhook header validation on every intake request
-7. **AI output validation** вЂ” Zod-validated before every write; invalid = retry or log, never silently accepted
-8. **Configurable AI provider** вЂ” env config, single prompt template location
-
-### Open Architectural Questions to Resolve
-
-1. Drawer scope: query by `mahalla_id` or `telegram_chat_id`? (Critical if one mahalla maps to multiple monitored Telegram groups)
-2. AI model + provider final selection (after implementation-time validation)
-3. Pre-filter thresholds (after real mahalla data testing)
-4. Session store implementation (`connect-pg-simple` vs Redis-backed)
-5. Whether to retain a small sample of ignored messages during classifier tuning
+1. **District-scoped data isolation** — middleware guard on all API routes
+2. **Pre-filter pipeline centralization** — `src/bot/filters/pipeline.ts` only
+3. **Uzbek Cyrillic string enforcement** — typed `strings.ts` dictionary + Vitest check
+4. **Health state propagation** — `batch_health` → `/api/health` → 60s poll → amber banner
+5. **Idempotency** — `telegram_update_id` unique constraint; `$transaction([signalCreate, rawDelete])` per message
+6. **Security secrets** — five env-only secrets (DATABASE_URL included); webhook validated via grammY `secretToken` option
+7. **AI output validation** — Zod discriminated union before every write; invalid = retry or log, never silently accepted
+8. **Gemini model selection** — `AI_MODEL` env var selects the Gemini model; Google AI is the only implemented provider in Phase 1
 
 ---
 
-## Starter Template Evaluation
+## 2. Development Strategy
 
-### Primary Technology Domain
+### Phase 1 — Validation-First Development
 
-Custom full-stack TypeScript modular monolith вЂ” no single off-the-shelf starter covers the bot intake + async worker + REST API + React SPA shape. The foundation is a hand-structured npm workspaces monorepo aligned to the two runtime processes required by the PRD.
+The goal of Phase 1 is to validate the core hypothesis — that AI classification of Telegram messages
+can reliably surface civic signals useful to district leadership — before investing in production
+infrastructure. Client feedback will drive Phase 2 scope.
 
-### Starter Options Considered
+**Phase 1 characteristics:**
+- Local PostgreSQL (no Docker Compose required for the server itself)
+- In-process `node-cron` scheduler (no Redis or BullMQ)
+- PostgreSQL-backed session store via `connect-pg-simple` (same DB, no Redis)
+- Express.js server (simpler middleware chain, more LLM-assisted examples, clean grammY integration)
+- Prisma ORM (fast schema iteration, guided migration, auto-generated TypeScript types)
+- Developer Ops Console at `/ops` — full pipeline visibility for HITL validation
+- Message simulator in Ops Console — inject test messages without real Telegram groups
+- Real bot integration with test groups in parallel — both paths feed the same pipeline
+- Simplified hokim dashboard — full features but no lane virtualization (deferred until >50 cards)
 
-| Option | Assessment |
-|---|---|
-| T3 Stack / create-t3-app | Next.js + Prisma opinionated; no bot/worker pattern; rejected |
-| Fastify Forge (Nx monorepo) | Includes Drizzle but uses Better Auth, not session cookies; Nx overhead unjustified for solo dev |
-| create-vite + manual workspace | вњ… Chosen вЂ” minimal, well-maintained, exact module control |
+**Phase 1 is NOT a prototype.** Database schema, API contracts, module boundaries, and security
+patterns are production-quality. Only infrastructure and queue management are simplified.
 
-### Selected Approach: Manual npm Workspaces Monorepo
+**Phase 1 → Phase 2 boundary:** Phase 2 begins after client validation confirms the pipeline is
+useful. See Section 16 for the Phase 2 roadmap.
 
-**Rationale:** The project has two distinct runtime processes (web + worker) that share a TypeScript codebase but must not interfere at runtime. npm workspaces with a flat `apps/` directory is the simplest structure that achieves this without introducing Nx/Turborepo overhead for a solo developer.
+---
 
-### Initialization Commands
+## 3. Technology Stack
 
-```bash
-# Root workspace init
-npm init -y
+### Package Versions (verified June 2026)
 
-# Frontend SPA
-npm create vite@latest apps/web -- --template react-ts
+**Backend:**
+- `express` v4.x (pinned — npm `latest` is v5.x; v4 chosen for ecosystem stability and `express-session` compatibility)
+- `express-session` v1.x + `connect-pg-simple` v9.x (pinned) — PostgreSQL-backed sessions
+- `prisma` v7.8.0 + `@prisma/client` v7.8.0
+- `pg` — PostgreSQL driver (required by Prisma 7 adapter)
+- `@prisma/adapter-pg` — Prisma 7 mandatory driver adapter for PostgreSQL
+- `grammy` (current stable) — `webhookCallback(bot, "express", { secretToken })`
+- `node-cron` v4.x — in-process scheduler
+- `argon2` — password hashing
+- `@google/genai` (current stable) — AI classification
+- `zod` v4.x — runtime validation
+- `morgan` — HTTP request logging
+- `pino` — structured application logging (pino-pretty for dev)
 
-# Backend (server + bot + worker)
-mkdir -p apps/server && cd apps/server && npm init -y
+**Frontend:**
+- `react` 18.x + `react-dom` (pinned — React 19 exists; 18.x chosen for AntD v6 compatibility)
+- `antd` v6.x — ConfigProvider token theming
+- `@tanstack/react-query` v5.x — server state caching
+- `@tanstack/react-virtual` — lane virtualization (deferred until >50 cards)
+- `react-router-dom` v6.30.x (pinned — v7 is a major rewrite; v6 is stable and well-documented)
+- `vite` ^6.x — dev server + production build
+- `typescript` — strict mode throughout
+
+**Tooling:**
+- `tsx` — development server watch mode
+- `eslint` — linting
+- `vitest` — unit tests
+
+### Project Structure
+
+```
+mahalla-ovozi/
+├── .env                              ← secrets (gitignored)
+├── .env.example                      ← template with all required keys
+├── .gitignore
+├── package.json                      ← npm workspaces root
+├── tsconfig.json                     ← root strict TypeScript config
+├── prisma/
+│   ├── schema.prisma                 ← single source of truth for all DB tables
+│   └── migrations/                   ← generated SQL migration files (committed)
+├── prisma.config.ts                  ← Prisma 7 CLI config: datasource URL for migrate/studio
+├── scripts/
+│   └── check-uz-strings.ts           ← Vitest: scans strings.ts for Latin slip-throughs
+├── apps/
+│   ├── server/
+│   │   ├── package.json
+│   │   ├── tsconfig.json             ← extends root
+│   │   └── src/
+│   │       ├── shared/
+│   │       │   ├── db.ts             ← Prisma client singleton
+│   │       │   ├── env.ts            ← EnvSchema (Zod) + validated config export
+│   │       │   └── types.ts          ← Signal, Mahalla, HealthStatus, ClassifierOutput types
+│   │       ├── bot/
+│   │       │   ├── index.ts          ← grammY Bot instance; registers message + member handlers
+│   │       │   ├── webhook.ts        ← Express route POST /webhook
+│   │       │   └── filters/
+│   │       │       └── pipeline.ts   ← ALL pre-filter logic (F1 bot, F2 type, F3 trivial content)
+│   │       ├── classifier/
+│   │       │   ├── index.ts          ← classifyBatch() public function
+│   │       │   ├── ai-client.ts      ← @google/genai client factory
+│   │       │   ├── prompt.ts         ← classification prompt template + few-shot examples
+│   │       │   ├── schema.ts         ← ClassifierOutputSchema (Zod v4) + ClassifierOutput type
+│   │       │   └── batch-processor.ts ← fetches pending raw_messages, calls AI, writes signal_messages
+│   │       ├── signals/
+│   │       │   ├── index.ts          ← getSignals(), getSignalContext() public functions
+│   │       │   ├── query.ts          ← Prisma query builders for all signal DB queries
+│   │       │   └── mapper.ts         ← DB snake_case row → camelCase API response shape
+│   │       ├── auth/
+│   │       │   ├── index.ts          ← registerAuthRoutes() Express router
+│   │       │   ├── routes.ts         ← POST /api/auth/login, POST /api/auth/logout
+│   │       │   ├── middleware.ts     ← requireAuth: validates session, injects districtId
+│   │       │   └── password.ts       ← argon2 hash + verify helpers
+│   │       ├── health/
+│   │       │   ├── index.ts          ← registerHealthRoutes() Express router
+│   │       │   ├── routes.ts         ← GET /api/health
+│   │       │   └── query.ts          ← reads batch_health table
+│   │       ├── ops/
+│   │       │   ├── index.ts          ← registerOpsRoutes() Express router (dev-only guard)
+│   │       │   ├── routes.ts         ← GET/POST /api/ops/* endpoints
+│   │       │   └── simulator.ts      ← injectMessage() — writes directly to raw_messages
+│   │       └── web/
+│   │           └── index.ts          ← Express server entry; registers all routers + starts server
+│   └── web/
+│       ├── package.json
+│       ├── tsconfig.json             ← extends root
+│       ├── vite.config.ts            ← /api proxy → server in dev
+│       ├── index.html
+│       └── src/
+│           ├── main.tsx              ← React entry; QueryClientProvider + ConfigProvider
+│           ├── theme.ts              ← AntD v6 ConfigProvider mahallaTheme token overrides
+│           ├── strings.ts            ← typed Uzbek Cyrillic UI string dictionary (ALL user-facing copy)
+│           ├── types.ts              ← API response interface types (mirrors server types)
+│           ├── router.tsx            ← React Router v6: /login, /, /ops routes
+│           ├── api/
+│           │   ├── signals.ts        ← useSignals() TanStack Query hook
+│           │   ├── mahallas.ts       ← useMahallas() hook
+│           │   ├── health.ts         ← useHealth() hook (60s refetchInterval)
+│           │   └── auth.ts           ← login(), logout() mutations
+│           ├── hooks/
+│           │   └── use-filters.ts    ← filter state: mahalla, time-range, keyword
+│           ├── pages/
+│           │   ├── dashboard-page.tsx  ← owns data fetch, filter state, drawer state
+│           │   ├── login-page.tsx
+│           │   └── ops-page.tsx       ← Developer Ops Console root page
+│           └── components/
+│               ├── filter-bar/
+│               │   ├── filter-bar.tsx
+│               │   ├── time-range-chips.tsx  ← Cyrillic labels
+│               │   ├── mahalla-select.tsx
+│               │   └── keyword-search.tsx
+│               ├── lane-grid/
+│               │   ├── lane-grid.tsx
+│               │   └── lane-column.tsx
+│               ├── signal-card/
+│               │   ├── signal-card.tsx       ← no tone badge
+│               │   └── signal-card.test.tsx
+│               ├── context-drawer/
+│               │   ├── context-drawer.tsx
+│               │   └── drawer-signal-card.tsx
+│               ├── ops/
+│               │   ├── message-simulator.tsx  ← inject test messages form
+│               │   ├── pipeline-event-log.tsx ← live pipeline trace
+│               │   ├── batch-status.tsx       ← last run + manual trigger button
+│               │   ├── raw-messages-table.tsx ← pending queue viewer
+│               │   ├── signals-browser.tsx    ← stored signals viewer
+│               │   └── system-health.tsx      ← DB + scheduler + AI API status
+│               ├── delay-banner.tsx
+│               └── unsupported-screen.tsx
 ```
 
-Root `package.json` workspace config:
+**Development scripts (root package.json):**
 ```json
 {
-  "workspaces": ["apps/*"],
-  "private": true
+  "scripts": {
+    "dev:server": "tsx watch apps/server/src/web/index.ts",
+    "dev:web":    "vite --config apps/web/vite.config.ts",
+    "lint":       "eslint apps/",
+    "test":       "vitest run",
+    "db:migrate": "prisma migrate dev",
+    "db:push":    "prisma db push",
+    "db:studio":  "prisma studio",
+    "db:reset":   "prisma migrate reset"
+  }
 }
 ```
 
-### Architectural Decisions Established by This Foundation
+---
 
-**Language & Runtime:**
-- TypeScript throughout; strict mode enabled; root `tsconfig.json` + per-app extends
-- Node.js 20+ LTS; `tsx` for development, compiled JS for production Docker images
+## 4. Data Architecture
 
-**Package Versions (verified May 2026):**
-- `fastify` v5.8.5
-- `drizzle-orm` v0.45.2 + `drizzle-kit` (latest) + `postgres.js` driver
-- `bullmq` v5.x вЂ” scheduler via `upsertJobScheduler` (replaces repeatable jobs API, introduced in v5.16.0)
-- `grammy` (current stable) вЂ” `webhookCallback(bot, "fastify")` for Fastify integration
-- `antd` v5.x вЂ” `ConfigProvider` token theming, no Tailwind
-- `@tanstack/react-query` v5.x вЂ” server state caching in SPA
-- `@tanstack/react-virtual` вЂ” lane virtualization (>50 cards threshold)
-- `zod` вЂ” runtime validation for env config, API inputs, and AI output
+### Prisma Schema
 
-**Build Tooling:**
-- Frontend: Vite (HMR dev server, optimized production bundle)
-- Backend: `tsx` for dev watch, `tsc` compile for production Docker image
-- Linting: ESLint with TypeScript rules
+All tables defined in `prisma/schema.prisma`. All timestamps stored as UTC.
 
-**Testing Framework:**
-- Unit tests: Vitest (shared across server and web workspaces)
-- E2E: planned post-pilot via `bmad-qa-generate-e2e-tests`
+```prisma
+// prisma/schema.prisma
 
-**Project Structure:**
+generator client {
+  provider = "prisma-client"
+  // Output path relative to prisma/schema.prisma at project root.
+  // Import in server code: import { PrismaClient } from '../generated/prisma'
+  // (path relative to apps/server/src/)
+  output   = "../apps/server/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url is NOT declared here in Prisma 7 — it is configured in prisma.config.ts (see below).
+  // Prisma CLI (migrate dev / db push / studio) reads the URL from prisma.config.ts.
+  // At runtime the connection string is passed through @prisma/adapter-pg — see db.ts.
+}
+
+model District {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(200)
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now())
+
+  mahallas      Mahalla[]
+  users         User[]
+  rawMessages   RawMessage[]
+  signalMessages SignalMessage[]
+  batchHealths  BatchHealth[]
+
+  @@map("districts")
+}
+
+model Mahalla {
+  id               Int       @id @default(autoincrement())
+  district_id      Int
+  name             String    @db.VarChar(200)
+  // BigInt: Telegram supergroup IDs are signed int64 and exceed the 32-bit Int range
+  // (max ~±2.1 billion). E.g. -1001234567890 is a valid supergroup chat_id.
+  telegram_chat_id BigInt    @unique
+  bot_status       String    @default("active") @db.VarChar(20)
+  // 'active' | 'removed' | 'unknown'
+  bot_last_seen_at DateTime?
+  created_at       DateTime  @default(now())
+
+  district       District       @relation(fields: [district_id], references: [id])
+  rawMessages    RawMessage[]
+  signalMessages SignalMessage[]
+
+  @@index([district_id])
+  @@index([telegram_chat_id])
+  @@map("mahallas")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  district_id   Int
+  username      String   @unique @db.VarChar(100)
+  password_hash String
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  district District @relation(fields: [district_id], references: [id])
+
+  @@index([district_id])
+  @@map("users")
+}
+
+model RawMessage {
+  id                   Int      @id @default(autoincrement())
+  // update_id: Telegram's global monotonic counter. Safe as Int32 at current scale (~500M range).
+  // Simulated messages (from Ops Console) use NEGATIVE values from an in-process counter
+  // (-1, -2, -3...) that stays well within Int32 bounds and never collides with real update IDs.
+  telegram_update_id   Int      @unique
+  telegram_message_id  Int
+  // chat_id: BigInt — supergroup IDs exceed Number.MAX_SAFE_INTEGER
+  chat_id              BigInt
+  district_id          Int
+  mahalla_id           Int
+  sender_is_bot        Boolean  @default(false)
+  sender_display_name  String?  @db.VarChar(300)
+  sender_username      String?  @db.VarChar(100)
+  text                 String
+  text_source          String   @db.VarChar(10)
+  // 'text' | 'caption'
+  telegram_timestamp   DateTime
+  created_at           DateTime @default(now())
+
+  district District @relation(fields: [district_id], references: [id])
+  mahalla  Mahalla  @relation(fields: [mahalla_id], references: [id])
+
+  @@index([district_id])
+  @@index([mahalla_id])
+  @@index([created_at])
+  @@map("raw_messages")
+}
+
+model SignalMessage {
+  id                   Int      @id @default(autoincrement())
+  telegram_update_id   Int      @unique
+  telegram_message_id  Int
+  district_id          Int
+  mahalla_id           Int
+  sender_display_name  String?  @db.VarChar(300)
+  sender_username      String?  @db.VarChar(100)
+  telegram_timestamp   DateTime
+  raw_text             String
+  text_source          String   @db.VarChar(10)
+  // 'text' | 'caption'
+  category             String   @db.VarChar(20)
+  // 'water' | 'electricity' | 'gas' | 'waste'
+  hokim_related        Boolean  @default(false)
+  // NOTE: No tone field — removed from MVP scope entirely
+  short_label          String?  @db.VarChar(100)
+  classified_at        DateTime
+  created_at           DateTime @default(now())
+
+  district District @relation(fields: [district_id], references: [id])
+  mahalla  Mahalla  @relation(fields: [mahalla_id], references: [id])
+
+  @@index([mahalla_id])
+  @@index([district_id])
+  @@index([category])
+  @@index([telegram_timestamp])
+  @@index([hokim_related])
+  @@map("signal_messages")
+}
+
+model BatchHealth {
+  id                  Int       @id @default(autoincrement())
+  district_id         Int
+  status              String    @db.VarChar(20)
+  // 'ok' | 'failed' | 'running'
+  started_at          DateTime
+  completed_at        DateTime?
+  messages_fetched    Int       @default(0)
+  signals_written     Int       @default(0)
+  ignored_count       Int       @default(0)
+  // Stage-1 pre-filter discards (counted at intake, written at batch completion)
+  pre_filter_discards Int       @default(0)
+  error_message       String?
+
+  district District @relation(fields: [district_id], references: [id])
+
+  @@index([district_id])
+  @@index([started_at])
+  @@map("batch_health")
+}
+
+// Phase 1 only — stores per-message pipeline trace for Ops Console display.
+// This model is DROPPED in the Phase 2 migration and not used in production.
+model PipelineEvent {
+  id             Int      @id @default(autoincrement())
+  event_type     String   @db.VarChar(30)
+  // 'raw' | 'prefilter_pass' | 'prefilter_discard' | 'ai_call' | 'ai_result' | 'stored' | 'error'
+  raw_message_id Int?
+  signal_id      Int?
+  detail         Json     @default("{}")
+  created_at     DateTime @default(now())
+
+  @@index([created_at])
+  @@map("pipeline_events")
+}
 ```
-mahalla-ovozi/
-в”њв”Ђв”Ђ apps/
-в”‚   в”њв”Ђв”Ђ server/              в†ђ Fastify web process + bot intake + BullMQ worker
-в”‚   в”‚   в””в”Ђв”Ђ src/
-в”‚   в”‚       в”њв”Ђв”Ђ bot/         в†ђ grammY setup, webhook handler, filters/pipeline.ts
-в”‚   в”‚       в”њв”Ђв”Ђ classifier/  в†ђ AI classification, prompt template, Zod output schema
-в”‚   в”‚       в”њв”Ђв”Ђ signals/     в†ђ signal query/storage/retention logic
-в”‚   в”‚       в”њв”Ђв”Ђ auth/        в†ђ session middleware, login/logout routes
-в”‚   в”‚       в”њв”Ђв”Ђ health/      в†ђ /api/health endpoint, batch_health queries
-в”‚   в”‚       в”њв”Ђв”Ђ shared/      в†ђ db client, env config, types
-в”‚   в”‚       в”њв”Ђв”Ђ worker/      в†ђ BullMQ scheduler + processor entry point
-в”‚   в”‚       в””в”Ђв”Ђ web/         в†ђ Fastify server entry point (API + webhook routes)
-в”‚   в””в”Ђв”Ђ web/                 в†ђ React + Vite SPA
-в”‚       в””в”Ђв”Ђ src/
-в”‚           в”њв”Ђв”Ђ components/  в†ђ LaneGrid, LaneColumn, SignalCard, Drawer wrappers
-в”‚           в”њв”Ђв”Ђ pages/       в†ђ DashboardPage, LoginPage
-в”‚           в”њв”Ђв”Ђ api/         в†ђ TanStack Query hooks
-в”‚           в”њв”Ђв”Ђ strings.ts   в†ђ Typed Uzbek Cyrillic UI string dictionary
-в”‚           в””в”Ђв”Ђ theme.ts     в†ђ AntD ConfigProvider token overrides
-в”њв”Ђв”Ђ drizzle/                 в†ђ Generated SQL migrations
-в”њв”Ђв”Ђ drizzle.config.ts
-в”њв”Ђв”Ђ docker-compose.yml
-в””в”Ђв”Ђ package.json             в†ђ npm workspaces root
+
+### Prisma 7 Runtime Setup
+
+Prisma 7 uses `prisma.config.ts` as the unified configuration file for the CLI and moves the
+datasource URL out of `schema.prisma`. The `datasource db` block in `schema.prisma` only declares
+the provider; the URL is configured in `prisma.config.ts` for Prisma CLI commands (migrate, studio).
+At runtime, the connection string is passed directly through `@prisma/adapter-pg` in `db.ts`.
+
+**`prisma.config.ts`** (project root — used by Prisma CLI: migrate dev, db push, studio):
+```typescript
+// prisma.config.ts
+import { defineConfig, env } from 'prisma/config'
+
+export default defineConfig({
+  earlyAccess: true,
+  schema: './prisma/schema.prisma',
+  datasource: {
+    // url used by Prisma CLI for migrations and studio only.
+    // At runtime the adapter in db.ts uses the same env var directly.
+    url: env('DATABASE_URL'),
+  },
+})
 ```
 
-**Development Scripts:**
-- `npm run dev:web` вЂ” Vite SPA dev server
-- `npm run dev:server` вЂ” Fastify server with tsx watch
-- `npm run dev:worker` вЂ” BullMQ worker with tsx watch
-- ngrok/cloudflare tunnel required for local Telegram webhook testing
+**`apps/server/src/shared/db.ts`** (Prisma client singleton — used at runtime):
+```typescript
+import { PrismaClient } from '../generated/prisma'
+import { PrismaPg } from '@prisma/adapter-pg'
 
-**Note:** Project workspace initialization is the first implementation story.
+// Runtime connection: PrismaClient reads DATABASE_URL directly via the adapter.
+// This is independent of prisma.config.ts — the adapter is the runtime connection layer.
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+
+// Singleton: reuse one PrismaClient across the entire server process.
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}
+```
+
+**Note:** `connect-pg-simple` uses its own `pg.Pool` for session storage (not the Prisma client).
+This is correct — sessions are managed separately from Prisma-managed tables.
+
+### Two-Stage Discard Model
+
+Messages are discarded at two distinct stages. Do not conflate them:
+
+- **Stage 1 — Pre-filter discard (at webhook intake, in `pipeline.ts`):** Messages rejected by F1/F2/F3
+  filters are never written to `raw_messages`. They are counted in structured pino logs at `info` level
+  and summarized in `batch_health.pre_filter_discards` per run.
+
+- **Stage 2 — AI-classified-as-ignore (at batch time):** Messages that pass pre-filtering but are
+  classified by AI as non-civic signals. These exist in `raw_messages` and are deleted after
+  classification. All ignored messages are deleted — ignored-message sampling is a Phase 2 feature.
+
+### Migration Approach
+
+```bash
+# Development iteration (fast, guided, creates migration files)
+npx prisma migrate dev --name <description>
+
+# Very early prototyping (no migration file, direct push)
+npx prisma db push
+
+# Reset entire DB during Phase 1 experiments
+npx prisma migrate reset
+
+# Production (Phase 2)
+npx prisma migrate deploy
+```
+
+### Data Retention
+
+Signal retention is enforced 90 days from `signal_messages.created_at`, meaning 90 days from when
+the system stored the classified signal. Telegram original message time is preserved separately as
+`telegram_timestamp` for display, filtering, and context queries, but it is not used for retention.
+
+Enforced via a daily `node-cron` job in the server process:
+```typescript
+// runs at 03:00 UTC daily
+cron.schedule('0 3 * * *', async () => {
+  const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+  const result = await prisma.signalMessage.deleteMany({
+    where: { created_at: { lt: cutoff } }
+  })
+  logger.info({ deleted: result.count }, 'Signal retention purge complete')
+})
+```
 
 ---
 
-## Core Architectural Decisions
+## 5. Core Architectural Decisions
 
-### Decision Priority Analysis
-
-**Critical Decisions (Block Implementation):**
-- Drawer context query scope: `mahalla_id` (not `telegram_chat_id`)
-- Session store: Redis-backed via `@fastify/session` + `ioredis`
-- Login mechanism: username/password in `users` table, `argon2` hashing
-
-**Important Decisions (Shape Architecture):**
-- Ignored message debug sampling: configurable via `RETAIN_IGNORED_SAMPLE_SIZE` env var (integer, default 0 = disabled)
-- API versioning: none for MVP
-- Global UI state: React built-ins only (`useState` + `useReducer`), no Zustand/Redux
-- Routing: React Router v6, two routes only (`/login`, `/`)
-- Docker Compose: separate `server` and `worker` services sharing one built image
-
-**Deferred Decisions (Post-MVP):**
-- CI/CD GitHub Actions pipeline
-- Managed PostgreSQL/Redis (post-pilot cost analysis)
-- `prefers-reduced-motion` CSS support
-- Tablet/iPad breakpoint layout
+| Decision | Choice | Rationale |
+|---|---|---|
+| Drawer context scope | `mahalla_id` (not `telegram_chat_id`) | Semantically correct for MVP (1 group per mahalla, enforced by `@unique` on `telegram_chat_id`); also future-proof if a mahalla has multiple groups in Phase 2 |
+| Session store | PostgreSQL via `connect-pg-simple` | No Redis needed in Phase 1; same DB already running |
+| Login mechanism | username/password + argon2 | No email flow; operator creates accounts via seed script |
+| Ignored message sampling | Removed from Phase 1 | Adds state tracking complexity without validation benefit; revisit in Phase 2 |
+| API versioning | None for Phase 1 | Single internal SPA client, co-deployed |
+| Global UI state | React built-ins only | No Zustand/Redux needed at MVP scale |
+| Routing | React Router v6.30.x — 3 routes: `/login`, `/`, `/ops` | Minimal; `/ops` is developer-only |
+| Ops Console auth | No auth in Phase 1 local dev | Developer tool; ENV guard disables `/ops` in production |
+| AI provider | Gemini (configurable model via `AI_MODEL` env) | Only Google AI is implemented; `AI_MODEL` selects the model, not the provider |
 
 ---
 
-### Data Architecture
+## 6. Authentication & Security
 
-**Database:** PostgreSQL 16 via Docker Compose. Drizzle ORM v0.45.2 schema-as-code. Driver: `postgres.js`. Migrations: `npx drizzle-kit generate` + `npx drizzle-kit migrate`.
+**Session setup:**
+```typescript
+import session from 'express-session'
+import connectPgSimple from 'connect-pg-simple'
+import { Pool } from 'pg'
 
-**Drawer context scope:** `mahalla_id` вЂ” the drawer fetches all signals for `category = X AND mahalla_id = Y AND time_range`. This correctly aggregates across multiple Telegram groups belonging to the same mahalla. `telegram_chat_id` is used only for bot group routing, not for signal queries.
+const PgStore = connectPgSimple(session)
+const pgPool = new Pool({ connectionString: env.DATABASE_URL })
 
-**Two-stage discard model (important — these are distinct populations):**
+app.use(session({
+  store: new PgStore({
+    pool: pgPool,
+    tableName: 'sessions',
+    createTableIfMissing: true  // convenient for Phase 1 dev
+  }),
+  secret: env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,   // Phase 1: false (local, no HTTPS). Phase 2: true (behind Nginx)
+    sameSite: 'strict',
+    maxAge: 8 * 60 * 60 * 1000  // 8 hours
+  }
+}))
+```
 
-Messages are discarded at two separate stages. Conflating them causes incorrect classifier tuning.
+**CSRF protection:** `sameSite: 'strict'` on session cookie prevents cross-origin submission.
 
-- **Stage 1 — Pre-filter discard (at webhook intake, in `pipeline.ts`):** Messages rejected by F1/F2/F3 filters are never written to `raw_messages`. They are counted in structured `pino` logs at `info` level (`{ stage: 'prefilter', reason: 'bot_sender' | 'non_text' | 'trivial', districtId }`) and summarized in `batch_health.pre_filter_discards` per batch run. These discards are NOT accessible via `RETAIN_IGNORED_SAMPLE_SIZE` — they never reach the DB.
+**Authorization middleware:** Guard on all `/api/*` routes except `/api/auth/*`. Reads
+`req.session.userId` + `req.session.districtId` and injects `districtId` into all downstream queries.
 
-- **Stage 2 — AI-classified-as-ignore (at batch time, in `batch-processor.ts`):** Messages that pass pre-filtering but are classified by AI as non-civic signals. These exist in `raw_messages` and are deleted after classification. `RETAIN_IGNORED_SAMPLE_SIZE` controls how many of these are retained per district for classifier tuning review.
+**Login rate limiting:** 5 attempts per username per 60-second window. In-memory counter map in
+`auth/routes.ts`. Returns HTTP 429 when exceeded.
 
-**`RETAIN_IGNORED_SAMPLE_SIZE` scope clarification:** `RETAIN_IGNORED_SAMPLE_SIZE` env var (integer, default 0). When > 0, the batch worker retains up to N most-recent AI-classified-as-ignore `raw_messages` per district. All other AI-ignored messages are deleted. Disabled by default in production after pilot tuning completes. Pre-filter discards are never in scope for this flag.
+**Telegram webhook security:** Every incoming update validated via `X-Telegram-Bot-Api-Secret-Token`
+header against `TELEGRAM_WEBHOOK_SECRET` env var. Requests failing this check are rejected HTTP 401.
 
-**Caching strategy:** No application-level cache for MVP. Redis is used exclusively for BullMQ queue backing store and session storage. Signal queries hit PostgreSQL directly. At pilot load (в‰¤1,000 msg/day), query latency is acceptable without a cache layer.
+**Ops Console guard:**
+```typescript
+// ops/index.ts — /ops routes disabled in production
+if (env.NODE_ENV === 'production') {
+  router.all('*', (_req, res) => res.status(404).json({ error: 'Not found' }))
+  return router
+}
+```
 
-
-**Migration approach:** Drizzle Kit generates SQL migration files committed to the repo. Applied on deploy via `npx drizzle-kit migrate` in the server container entrypoint before starting Fastify.
+**Secrets (five env-only, never logged or committed):**
+`DATABASE_URL`, `BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `AI_API_KEY`, `SESSION_SECRET`
 
 ---
 
-### Database Schema
+## 7. API & Communication Patterns
 
-All tables use Drizzle schema-as-code in `apps/server/src/shared/schema/`. Column types use Drizzle's `postgres-js` dialect. All timestamps are stored as UTC and returned as UTC ISO 8601 strings.
+### Endpoints
 
-#### `districts`
-
-```typescript
-// apps/server/src/shared/schema/districts.ts
-export const districts = pgTable('districts', {
-  id:        serial('id').primaryKey(),
-  name:      varchar('name', { length: 200 }).notNull(),
-  is_active: boolean('is_active').notNull().default(true),
-  created_at: timestamp('created_at').notNull().defaultNow(),
-});
-```
-
-#### `mahallas`
-
-```typescript
-// apps/server/src/shared/schema/mahallas.ts
-export const mahallas = pgTable('mahallas', {
-  id:               serial('id').primaryKey(),
-  district_id:      integer('district_id').notNull().references(() => districts.id),
-  name:             varchar('name', { length: 200 }).notNull(),
-  // IMPORTANT: mode:'bigint' required — Telegram supergroup IDs are negative int64 values
-  // (e.g. -1001234567890) that exceed Number.MAX_SAFE_INTEGER. mode:'number' would corrupt them.
-  telegram_chat_id: bigint('telegram_chat_id', { mode: 'bigint' }).notNull().unique(),
-  bot_status:       varchar('bot_status', { length: 20 }).notNull().default('active'),
-    // 'active' | 'removed' | 'unknown'
-  bot_last_seen_at: timestamp('bot_last_seen_at'),
-  created_at:       timestamp('created_at').notNull().defaultNow(),
-}, (t) => ({
-  idx_mahallas_district:      index('idx_mahallas_district_id').on(t.district_id),
-  idx_mahallas_telegram_chat: index('idx_mahallas_telegram_chat_id').on(t.telegram_chat_id),
-}));
-```
-
-**Telegram routing note:** `telegram_chat_id` is the canonical link between an incoming Telegram update and a mahalla. On every bot message intake, `pipeline.ts` looks up `mahallas` by `telegram_chat_id` to resolve the `mahalla_id` and `district_id`. If no matching row exists, the message is discarded and logged with `warn` level. Operator registers each monitored group by inserting a `mahallas` row (via seed script or admin CLI) before the bot is added to the group.
-
-#### `users`
-
-```typescript
-// apps/server/src/shared/schema/users.ts
-export const users = pgTable('users', {
-  id:            serial('id').primaryKey(),
-  district_id:   integer('district_id').notNull().references(() => districts.id),
-  username:      varchar('username', { length: 100 }).notNull().unique(),
-  password_hash: text('password_hash').notNull(),
-  is_active:     boolean('is_active').notNull().default(true),
-  created_at:    timestamp('created_at').notNull().defaultNow(),
-}, (t) => ({
-  idx_users_district: index('idx_users_district_id').on(t.district_id),
-}));
-```
-
-#### `raw_messages`
-
-```typescript
-// apps/server/src/shared/schema/raw-messages.ts
-export const rawMessages = pgTable('raw_messages', {
-  id:                  serial('id').primaryKey(),
-  // update_id is a global monotonic counter — safe as JS number for current Telegram scale.
-  telegram_update_id:  bigint('telegram_update_id', { mode: 'number' }).notNull().unique(),
-  // message_id is per-chat. Stored for future deep-linking (t.me/c/chatid/messageid).
-  telegram_message_id: bigint('telegram_message_id', { mode: 'number' }).notNull(),
-  // chat_id: mode:'bigint' — supergroup IDs exceed Number.MAX_SAFE_INTEGER.
-  chat_id:             bigint('chat_id', { mode: 'bigint' }).notNull(),
-  district_id:         integer('district_id').notNull().references(() => districts.id),
-  mahalla_id:          integer('mahalla_id').notNull().references(() => mahallas.id),
-  sender_is_bot:       boolean('sender_is_bot').notNull().default(false),
-  sender_display_name: varchar('sender_display_name', { length: 300 }),
-  sender_username:     varchar('sender_username', { length: 100 }),
-  text:                text('text').notNull(),
-  text_source:         varchar('text_source', { length: 10 }).notNull(),
-    // 'text' | 'caption'
-  telegram_timestamp:  timestamp('telegram_timestamp').notNull(),
-  created_at:          timestamp('created_at').notNull().defaultNow(),
-}, (t) => ({
-  idx_raw_messages_district:   index('idx_raw_messages_district_id').on(t.district_id),
-  idx_raw_messages_mahalla:    index('idx_raw_messages_mahalla_id').on(t.mahalla_id),
-  idx_raw_messages_created_at: index('idx_raw_messages_created_at').on(t.created_at),
-}));
-```
-
-**Idempotency:** `telegram_update_id` UNIQUE constraint prevents duplicate intake. All inserts use `.onConflictDoNothing()`.
-
-#### `signal_messages`
-
-```typescript
-// apps/server/src/shared/schema/signal-messages.ts
-export const signalMessages = pgTable('signal_messages', {
-  id:                  serial('id').primaryKey(),
-  telegram_update_id:  bigint('telegram_update_id', { mode: 'number' }).notNull().unique(),
-  // message_id copied from raw_messages for future deep-linking capability.
-  telegram_message_id: bigint('telegram_message_id', { mode: 'number' }).notNull(),
-  district_id:         integer('district_id').notNull().references(() => districts.id),
-  mahalla_id:          integer('mahalla_id').notNull().references(() => mahallas.id),
-  sender_display_name: varchar('sender_display_name', { length: 300 }),
-  sender_username:     varchar('sender_username', { length: 100 }),
-  telegram_timestamp:  timestamp('telegram_timestamp').notNull(),
-  raw_text:            text('raw_text').notNull(),
-  text_source:         varchar('text_source', { length: 10 }).notNull(),
-    // 'text' | 'caption'
-  category:            varchar('category', { length: 20 }).notNull(),
-    // 'water' | 'electricity' | 'gas' | 'waste'
-  hokim_related:       boolean('hokim_related').notNull().default(false),
-  tone:                varchar('tone', { length: 20 }).notNull(),
-    // 'complaint' | 'announcement' | 'praise' | 'question'
-  short_label:         varchar('short_label', { length: 100 }),
-  classified_at:       timestamp('classified_at').notNull(),
-  created_at:          timestamp('created_at').notNull().defaultNow(),
-}, (t) => ({
-  idx_signal_messages_mahalla_id:  index('idx_signal_messages_mahalla_id').on(t.mahalla_id),
-  idx_signal_messages_district_id: index('idx_signal_messages_district_id').on(t.district_id),
-  idx_signal_messages_category:    index('idx_signal_messages_category').on(t.category),
-  idx_signal_messages_timestamp:   index('idx_signal_messages_telegram_timestamp').on(t.telegram_timestamp),
-  idx_signal_messages_hokim:       index('idx_signal_messages_hokim_related').on(t.hokim_related),
-}));
-```
-
-**Retention:** Signals older than 90 days are purged by a daily scheduled BullMQ job. See Infrastructure & Deployment section.
-
-#### `batch_health`
-
-```typescript
-// apps/server/src/shared/schema/batch-health.ts
-export const batchHealth = pgTable('batch_health', {
-  id:                   serial('id').primaryKey(),
-  district_id:          integer('district_id').notNull().references(() => districts.id),
-  status:               varchar('status', { length: 20 }).notNull(),
-    // 'ok' | 'failed' | 'running'
-  started_at:           timestamp('started_at').notNull(),
-  completed_at:         timestamp('completed_at'),
-  messages_fetched:     integer('messages_fetched').notNull().default(0),
-  signals_written:      integer('signals_written').notNull().default(0),
-  ignored_count:        integer('ignored_count').notNull().default(0),
-  // pre_filter_discards: Stage-1 discards counted at intake time and written here
-  // at batch completion. Required by FR33 (operator health: pre-filter discard counts).
-  // Breakdown by reason is in pino logs; this field gives the aggregate per batch run.
-  pre_filter_discards:  integer('pre_filter_discards').notNull().default(0),
-  error_message:        text('error_message'),
-}, (t) => ({
-  idx_batch_health_district:   index('idx_batch_health_district_id').on(t.district_id),
-  idx_batch_health_started_at: index('idx_batch_health_started_at').on(t.started_at),
-}));
-```
-
-`/api/health` reads the most recent row per district. `last_batch_at` is `completed_at` of the most recent `status = 'ok'` row. `pre_filter_discards` is surfaced in the operator health endpoint alongside `ignored_count` (AI-classified discards) to satisfy FR33.
-
----
-
-
-
-### Authentication & Security
-
-**Auth mechanism:** Username/password stored in `users` table. Passwords hashed with `argon2`. No email flow. Operator creates accounts manually via seed script or admin CLI command.
-
-**Session store:** `@fastify/session` + Redis-backed store via connect-store interface + `ioredis`. Redis is already running for BullMQ — no additional infrastructure. Session TTL: 8 hours. Cookie flags: `httpOnly: true`, `secure: true`, `sameSite: 'strict'`.
-
-> **Implementation verification required (IMP-4):** Confirm `@fastify/session` v5+ is compatible with Fastify v5.8.5 and identify the correct Redis session store adapter (e.g., `connect-redis` v4+). Alternative if blocked: `@fastify/secure-session` (cookie-based encrypted session — no Redis adapter needed, uses SESSION_SECRET directly).
-
-**CSRF protection:** `sameSite: 'strict'` on the session cookie prevents cross-origin cookie submission, providing CSRF protection without a separate token. No additional CSRF mechanism is needed for MVP. Never change `sameSite` to `'lax'` or `'none'` without re-evaluating CSRF exposure.
-
-**Authorization:** Middleware guard on all `/api/*` routes (except `/api/auth/*`). Guard reads `session.userId` + `session.districtId` and injects `districtId` into all downstream DB queries. No signal is ever returned without a `WHERE district_id = ?` clause.
-
-**Login rate limiting (IMP-7):** `POST /api/auth/login` enforces 5 attempts per username per 60-second window. Implement as a simple in-memory counter map in `auth/routes.ts` (key: username, value: `{ count, windowStart }`). Reset window on expiry. Return HTTP 429 when exceeded. Prevents brute-force attacks on operator credentials.
-
-**Telegram webhook security:** Every incoming update validated via `X-Telegram-Bot-Api-Secret-Token` header against `TELEGRAM_WEBHOOK_SECRET` env var. Requests failing this check are rejected HTTP 401 before any processing.
-
-**grammY Fastify v5 compatibility (IMP-6):** Verify that `grammy` current stable supports `webhookCallback(bot, 'fastify')` with Fastify v5.8.5 before writing the bot intake story. If incompatible, a thin custom handler is trivial: parse `req.body`, call `bot.handleUpdate(req.body)`, reply 200.
-
-**Secrets:** Four env-only secrets — `BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `AI_API_KEY`, `SESSION_SECRET`. Never logged, never committed.
-
----
-
-### API & Communication Patterns
-
-**Design:** REST. No versioning for MVP (single internal SPA client, co-deployed with server).
-
-**Key endpoints:**
 ```
 GET  /api/signals?category=&hokim_related=&mahalla_id=&from=&to=
 GET  /api/signals/:id/context?from=&to=
@@ -422,804 +591,568 @@ GET  /api/mahallas
 GET  /api/health
 POST /api/auth/login
 POST /api/auth/logout
+
+// Ops Console (dev only, guarded by NODE_ENV check)
+GET  /api/ops/raw-messages
+GET  /api/ops/pipeline-events
+GET  /api/ops/batch-status
+POST /api/ops/simulate-message
+POST /api/ops/trigger-batch
+
+// Bot webhook (not under /api namespace)
+POST /webhook
 ```
 
-**Context endpoint — two-step server lookup:**
-`GET /api/signals/:id/context?from=&to=` performs two steps internally:
-1. Fetch `signal_messages` by `:id` → extract `category` and `mahalla_id` from that row.
-2. Query `signal_messages WHERE category = ? AND mahalla_id = ? AND district_id = ? AND telegram_timestamp BETWEEN from AND to ORDER BY telegram_timestamp ASC`.
-
-The `from` and `to` query params are the user's currently active time-range filter (passed by the SPA). The `district_id` is always sourced from `req.session.districtId`, never from the request.
-
-**API response type shapes:**
+### API Response Type Shapes
 
 ```typescript
-// apps/server/src/shared/types.ts  (canonical — SPA mirrors these at HTTP boundary)
+// apps/server/src/shared/types.ts
 
 interface Signal {
-  id:                 number;
-  telegramUpdateId:   number;
-  districtId:         number;
-  mahallaId:          number;
-  mahallaName:        string;
-  senderDisplayName:  string | null;
-  senderUsername:     string | null;
-  telegramTimestamp:  string;          // ISO 8601 UTC
-  rawText:            string;
-  textSource:         'text' | 'caption';
-  category:           'water' | 'electricity' | 'gas' | 'waste';
-  hokimRelated:       boolean;
-  tone:               'complaint' | 'announcement' | 'praise' | 'question';
-  shortLabel:         string | null;
-  classifiedAt:       string;          // ISO 8601 UTC
+  id:                 number
+  telegramUpdateId:   number
+  districtId:         number
+  mahallaId:          number
+  mahallaName:        string
+  senderDisplayName:  string | null
+  senderUsername:     string | null
+  telegramTimestamp:  string    // ISO 8601 UTC
+  rawText:            string
+  textSource:         'text' | 'caption'
+  category:           'water' | 'electricity' | 'gas' | 'waste'
+  hokimRelated:       boolean
+  // NOTE: No tone field — removed from MVP scope
+  shortLabel:         string | null
+  classifiedAt:       string    // ISO 8601 UTC
 }
 
 interface Mahalla {
-  id:             number;
-  districtId:     number;
-  name:           string;
+  id:         number
+  districtId: number
+  name:       string
 }
 
 interface BotConnectivity {
-  mahallaId:   number;
-  mahallaName: string;
-  botStatus:   'active' | 'removed' | 'unknown';
-  botLastSeenAt: string | null;        // ISO 8601 UTC
+  mahallaId:    number
+  mahallaName:  string
+  botStatus:    'active' | 'removed' | 'unknown'
+  botLastSeenAt: string | null  // ISO 8601 UTC
 }
 
 interface HealthStatus {
-  lastBatchAt:      string | null;     // ISO 8601 UTC; null if no batch has run
-  queueDepth:       number;
-  botConnectivity:  BotConnectivity[];
-  errorsLastRun:    string | null;
-  status:           'ok' | 'failed' | 'running' | 'never_run';
+  lastBatchAt:        string | null  // ISO 8601 UTC; null if no batch has run
+  botConnectivity:    BotConnectivity[]
+  errorsLastRun:      string | null
+  status:             'ok' | 'failed' | 'running' | 'never_run'
+  // FR33: queue depth and discard counts surfaced on the operator health endpoint
+  pendingRawMessages: number         // current count in raw_messages pending classification
+  preFilterDiscards:  number         // Stage-1 discard count from most recent batch_health row
+  ignoredCount:       number         // AI-classified-as-ignore count from most recent batch_health row
 }
 ```
 
-**`mahallaName` join:** Signal query joins `signal_messages` with `mahallas` on `mahalla_id` so the API returns `mahallaName` directly. SPA does not need a separate mahalla lookup to display the card.
-
-**Error shape (Fastify v5 default serializer):**
+**Response format:** Unwrapped arrays — `GET /api/signals` returns `Signal[]` directly.
+**JSON casing:** camelCase in all API responses. DB snake_case rows mapped in `signals/mapper.ts`.
+**Null policy:** Absent optional fields returned as `null`, never `undefined`.
+**Error shape:**
 ```json
-{ "statusCode": 400, "error": "Bad Request", "message": "..." }
+{ "statusCode": 400, "error": "Bad Request", "message": "Human-readable description" }
 ```
-All 4xx/5xx responses follow this shape. No custom error codes in MVP.
 
-**Bot webhook endpoint:** `POST /webhook` вЂ” registered as a Fastify route, processed via `webhookCallback(bot, "fastify")`. Not under `/api/` namespace. Must respond within 10 seconds; all heavy work is queued asynchronously.
+### Context Endpoint — Two-Step Lookup
 
-**Rate limiting:** Not implemented for MVP. Internal tool, closed network. Revisit post-pilot.
+`GET /api/signals/:id/context?from=&to=` internally:
+1. Fetch `signal_messages` by `:id` → extract `category` and `mahalla_id`.
+2. Query `signal_messages WHERE category = ? AND mahalla_id = ? AND district_id = ? AND
+   telegram_timestamp BETWEEN from AND to ORDER BY telegram_timestamp ASC`.
+
+`district_id` always sourced from `req.session.districtId`, never from the request.
 
 ---
 
-### Frontend Architecture
+## 8. AI Classifier Specification
 
-**State management:**
+### Output Schema
+
+```typescript
+// apps/server/src/classifier/schema.ts
+import { z } from 'zod'
+
+// Discriminated union: enforces that category is REQUIRED when decision = 'signal'.
+// An AI response of { decision: 'signal' } (no category) will fail validation and trigger retry.
+export const ClassifierOutputSchema = z.discriminatedUnion('decision', [
+  z.object({
+    decision:      z.literal('signal'),
+    category:      z.enum(['water', 'electricity', 'gas', 'waste']),  // required for signal
+    hokim_related: z.boolean().optional(),
+    short_label:   z.string().max(100).optional(),
+  }),
+  z.object({
+    decision:      z.literal('ignore'),
+    category:      z.enum(['water', 'electricity', 'gas', 'waste']).optional(),
+    hokim_related: z.boolean().optional(),
+    short_label:   z.string().max(100).optional(),
+  }),
+])
+
+export type ClassifierOutput = z.infer<typeof ClassifierOutputSchema>
+```
+
+### AI Client
+
+```typescript
+// apps/server/src/classifier/ai-client.ts
+import { GoogleGenAI } from '@google/genai'
+import { z } from 'zod'
+import { ClassifierOutputSchema } from './schema.ts'
+
+const ai = new GoogleGenAI({ apiKey: env.AI_API_KEY })
+
+export async function classifyMessage(text: string): Promise<ClassifierOutput> {
+  const response = await ai.models.generateContent({
+    model: env.AI_MODEL,  // e.g. 'gemini-2.5-flash' — model is configurable, provider is Google
+    contents: buildPrompt(text),
+    config: {
+      responseMimeType: 'application/json',
+      // z.toJSONSchema() is the documented Zod v4 module-level function (not instance method)
+      responseSchema: z.toJSONSchema(ClassifierOutputSchema),
+      temperature: 0,     // deterministic output
+    },
+  })
+
+  const rawJson = JSON.parse(response.text ?? '{}')
+  const result = ClassifierOutputSchema.safeParse(rawJson)
+
+  if (!result.success) {
+    throw new Error(`AI output schema invalid: ${result.error.message}`)
+  }
+  return result.data
+}
+```
+
+### Retry Strategy
+
+3 attempts with exponential backoff before marking batch as failed.
+Failed messages are NOT deleted from `raw_messages` — they are retried in the next batch run.
+
+---
+
+## 9. Frontend Architecture
+
+### State Management
+
 - Server state: `@tanstack/react-query` v5.x — signals fetch, mahallas fetch, health poll (60s `refetchInterval`)
-- UI state: React `useState` + `useReducer` in `DashboardPage` — active filter, active signal ID, drawer open state. No Zustand/Redux.
+- UI state: React `useState` + `useReducer` in `DashboardPage` — active filter, active signal ID, drawer open state
 
-**Routing:** React Router v6. Two routes:
-- `/login` — unauthenticated login page
-- `/` — authenticated dashboard (redirects to `/login` if no session)
+### Routing (3 routes)
 
-**Component ownership:**
-- `DashboardPage` — data fetching, filter state, drawer open/close, lane scroll position state
-- `LaneGrid` — layout, virtual scroll instances, active card state
-- `SignalCard` — pure presentational, no internal state
-
-**Initial fetch scope and client-side slice boundary:**
-- The initial `GET /api/signals` call fetches signals for the **calendar day in UTC+5** (from `00:00:00 UTC+5` of the current day to `now`). This aligns with the hokim's workday mental model — "Today" means from midnight of the current day, not the rolling last 24 hours.
-- Time range presets `1 соат`, `3 соат`, `6 соат`, and `Бугун` operate **client-side** by slicing the already-fetched dataset — no additional API call, no skeleton shimmer.
-- Time range presets `Кеча` (yesterday) and `7 кун` (7 days) trigger a **new API call** with explicit `from` and `to` query params, showing skeleton shimmer on all lanes during fetch.
-- Custom `DatePicker.RangePicker` ranges always trigger a new API call.
-- SPA sends `from` and `to` as ISO 8601 UTC strings computed from the user's UTC+5 local time.
-
-**Lane scroll position preservation:**
-- `DashboardPage` stores each lane's scroll offset in state (`Record<LaneKey, number>`).
-- When the drawer opens, all lane scroll positions are frozen (virtual scroll offsets held).
-- When the drawer closes, each lane restores its previous scroll position.
-- Filter or time range changes reset all scroll positions to zero (top of lane).
-
-**AntD theme and fonts:** Single `ConfigProvider` at app root with `mahallaTheme` token overrides (`theme.ts`). All category color tokens defined there. No ad-hoc color literals in components. `index.html` loads Inter via Google Fonts with `display=swap` and `latin,latin-ext,cyrillic` subset for Uzbek Cyrillic rendering.
-
-**Uzbek Cyrillic enforcement:** `scripts/check-uz-strings.ts` Vitest test imports `strings.ts` and fails on known Latin slip-throughs (`soat`, `Bugun`, `Qidirish`, `Barcha`, `mahallalar`). Treated as a build failure. Run manually before PR merge until CI exists.
-
----
-
-
-### Infrastructure & Deployment
-
-**Docker Compose services:**
-```yaml
-services:
-  postgres:   # PostgreSQL 16-alpine
-  redis:      # Redis 7-alpine
-  server:     # Fastify API + bot webhook (CMD: node dist/web/index.js)
-  worker:     # BullMQ classifier worker (same image, CMD: node dist/worker/index.js)
-  nginx:      # Reverse proxy + HTTPS (Let's Encrypt)
-```
-`server` and `worker` share a single Docker image. Different `CMD` entry points enforce process isolation. Worker crashes do not affect the API or webhook intake.
-
-**Docker build context — critical:** The `Dockerfile` is located at `apps/server/Dockerfile`, but the Docker build context **must be the repository root** (not `./apps/server`), because the server container entrypoint runs `npx drizzle-kit migrate` which needs `drizzle.config.ts` and `drizzle/migrations/` at the repo root:
-```yaml
-# docker-compose.yml
-server:
-  build:
-    context: .                        # repo root — gives access to drizzle.config.ts
-    dockerfile: apps/server/Dockerfile
-  healthcheck:
-    test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-worker:
-  build:
-    context: .
-    dockerfile: apps/server/Dockerfile
-  command: node dist/worker/index.js
-  depends_on:
-    server:
-      condition: service_healthy    # prevents migration race condition (IMP-10)
+```typescript
+// apps/web/src/router.tsx
+<Routes>
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/" element={<AuthGuard><DashboardPage /></AuthGuard>} />
+  <Route path="/ops" element={<OpsPage />} />
+  {/* /ops has no auth guard in Phase 1; NODE_ENV guard is on the server */}
+</Routes>
 ```
 
-**Migrations on deploy (IMP-10):** Migrations run **only in the `server` container** entrypoint (`npx drizzle-kit migrate && node dist/web/index.js`). The `worker` container does NOT run migrations — it starts only after `server` reports healthy via the healthcheck above. Without `depends_on: service_healthy`, both containers start simultaneously and the worker may attempt DB operations before the schema is ready.
+### Initial Fetch Scope
 
-**Session TTL:** Absolute expiry — 8 hours from the time of login. No sliding window for MVP. Cookie expires after 8 hours regardless of activity. The hokim re-authenticates on the next workday. Rationale: simpler to implement; 8 hours covers a full workday with margin.
+- Default `GET /api/signals` fetches signals for the **calendar day in UTC+5** (from `00:00:00 UTC+5` of current day to `now`).
+- Time range presets `1 соат`, `3 соат`, `6 соат`, `Бугун` operate **client-side** (slice of fetched data — no re-fetch, no skeleton).
+- Presets `Кеча` (yesterday) and `7 кун` trigger a **new API call** with explicit `from`/`to` params — shows skeleton on all lanes.
 
-**Logging:** Fastify `pino` (JSON structured, stdout). `pino-pretty` for local dev. Viewed via `docker compose logs -f server worker`.
+### Component Ownership
 
-**Operator health:** `/api/health` returns `lastBatchAt`, `queueDepth`, `botConnectivity[]`, `errorsLastRun`, `status`. Hokim-facing amber banner reads only `lastBatchAt >= 25min`.
+- `DashboardPage` — owns all server state (TanStack Query) and all UI state; the sole data orchestrator
+- `LaneGrid` — layout only; receives pre-grouped `SignalsByCategory`, never fetches data
+- `SignalCard` — pure presentational; zero internal state; no tone badge
+- `FilterBar` — reads from `useFilters()` hook; emits changes up to `DashboardPage`
+- `OpsPage` — developer console; independent data fetching via its own queries
 
-**Bot connectivity health state:**
-- `my_chat_member` events are handled in `apps/server/src/bot/index.ts`.
-- On bot removal from a group: update `mahallas.bot_status = 'removed'` and `mahallas.bot_last_seen_at = now()` for the matching `telegram_chat_id`.
-- On bot re-addition: update `mahallas.bot_status = 'active'`.
-- `/api/health` reads `mahallas.bot_status` + `bot_last_seen_at` per district and returns the `botConnectivity[]` array. No separate table required.
+### AntD v6 Theme
 
-**90-day signal retention:**
-A daily BullMQ scheduled job (`purge-signals-daily`) runs at 03:00 UTC via `upsertJobScheduler`. It deletes `signal_messages WHERE created_at < NOW() - INTERVAL '90 days'`. Scheduled in `apps/server/src/worker/index.ts` alongside the classifier scheduler. Logs the count of deleted rows at `info` level.
+Single `ConfigProvider` at app root with `mahallaTheme` token overrides in `theme.ts`.
+All category color tokens defined there. No ad-hoc color literals in components.
 
-**Backups:** Daily `pg_dump` cron to external S3-compatible storage (e.g., Backblaze B2). Script: `scripts/backup.sh`. Restore procedure documented before pilot launch.
+### Uzbek Cyrillic Enforcement
 
-**CI/CD:** Deferred post-pilot. MVP deploy: `git pull && docker compose up --build -d`.
-
----
-
-
-### Decision Impact Analysis
-
-**Implementation Sequence (dependency order):**
-1. Workspace scaffold + Docker Compose + env config + root tsconfig
-2. Drizzle schema + migrations (all 6 tables)
-3. Auth module (argon2 + Redis session + middleware guard)
-4. Bot intake (grammY + webhook route + pre-filter `pipeline.ts`)
-5. Classifier module (AI client + Zod output schema + batch processor)
-6. BullMQ worker + scheduler (`upsertJobScheduler`, 20-minute interval)
-7. Signals API (query endpoints + `/api/health`)
-8. React SPA (`DashboardPage` + `LaneGrid` + `SignalCard` + AntD Drawer)
-9. `strings.ts` dictionary + `check-uz-strings.ts` lint test
-
-**Cross-Component Dependencies:**
-- `shared/` db client + env config is required by every other module
-- Auth middleware must be in place before any signal API route is testable
-- Drizzle schema must be finalized before classifier writes `signal_messages`
-- `strings.ts` must be populated before any React component renders UI copy
-- `/api/health` `last_batch_at` field is the single source of truth for the amber banner
-- `RETAIN_IGNORED_SAMPLE_SIZE=0` must be the default to prevent accidental data retention in production
+`scripts/check-uz-strings.ts` Vitest test scans `strings.ts` for known Latin slip-throughs.
+Treated as a build failure. All user-facing UI strings must live in `strings.ts` only.
 
 ---
 
-## Implementation Patterns and Consistency Rules
+## 10. Developer Ops Console
 
-### Critical Conflict Points Identified: 9 areas
+See [architecture-ops-console.md](./architecture-ops-console.md) for the full specification.
 
-Naming conventions, API JSON casing, date/time format, test file location, module boundary exports, structured log format, loading state rules, district scope injection, AI output validation.
+**Summary:** A developer-facing UI at `/ops` that provides complete pipeline visibility for
+human-in-the-loop (HITL) validation. Includes a message simulator, live pipeline event log,
+batch processor controls, pre-filter decision viewer, AI classification result viewer, signal
+browser, and system health dashboard. Disabled in production via `NODE_ENV` guard on the server.
 
 ---
+
+## 11. Telegram Bot Integration
+
+### Bot Setup
+
+```typescript
+// apps/server/src/bot/index.ts
+import { Bot } from 'grammy'
+import { pipeline } from './filters/pipeline.ts'
+
+export const bot = new Bot(env.BOT_TOKEN)
+
+// Message intake
+bot.on('message', async (ctx) => {
+  await pipeline(ctx.update, ctx.api)
+})
+
+// Bot connectivity monitoring
+bot.on('my_chat_member', async (ctx) => {
+  const chatId = BigInt(ctx.chat.id)
+  const newStatus = ctx.myChatMember.new_chat_member.status
+
+  if (newStatus === 'kicked' || newStatus === 'left') {
+    await prisma.mahalla.updateMany({
+      where: { telegram_chat_id: chatId },
+      data: { bot_status: 'removed', bot_last_seen_at: new Date() }
+    })
+  } else if (newStatus === 'member' || newStatus === 'administrator') {
+    await prisma.mahalla.updateMany({
+      where: { telegram_chat_id: chatId },
+      data: { bot_status: 'active', bot_last_seen_at: new Date() }
+    })
+  }
+})
+```
+
+### Express Webhook Route
+
+```typescript
+// apps/server/src/bot/webhook.ts
+import { webhookCallback } from 'grammy'
+import { bot } from './index.ts'
+import { Router } from 'express'
+import { env } from '../shared/env.ts'
+
+const router = Router()
+
+// secretToken: grammY validates X-Telegram-Bot-Api-Secret-Token header against env.TELEGRAM_WEBHOOK_SECRET.
+// Requests with an invalid or missing token are rejected by grammY before any processing.
+router.post('/webhook', webhookCallback(bot, 'express', { secretToken: env.TELEGRAM_WEBHOOK_SECRET }))
+
+export default router
+```
+
+### Pre-Filter Pipeline (F1/F2/F3)
+
+All pre-filter logic lives exclusively in `src/bot/filters/pipeline.ts`:
+
+- **F1 — Bot sender:** Discard if `update.message.from.is_bot === true`.
+- **F2 — Non-text type:** Discard if both `update.message.text` and `update.message.caption` are undefined.
+- **F3 — Trivial content (NARROW — length thresholds FORBIDDEN):**
+  - Discard if text starts with `/` (bot command)
+  - Discard if text is pure emoji (regex: `/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\s]+$/u` with no alphanumeric chars)
+  - Discard if text is empty after trimming
+  - **DO NOT** discard based on character count. Short civic texts like `gaz?`, `suv?`, `tok?` MUST reach the AI classifier.
+
+**Edited messages:** Discarded. `update.edited_message` is defined → discard and log.
+**Forwarded messages:** Treated as original. Sender = the forwarder.
+**Anonymous admin posts:** Discarded by F1 (`GroupAnonymousBot` has `is_bot === true`). Known limitation.
+
+---
+
+## 12. Infrastructure (Phase 1)
+
+### Local Development
+
+```bash
+# PostgreSQL: install locally or run a single container
+docker run -d --name mahalla-pg \
+  -e POSTGRES_DB=mahalla_ovozi \
+  -e POSTGRES_USER=mahalla \
+  -e POSTGRES_PASSWORD=devpassword \
+  -p 5432:5432 postgres:16-alpine
+
+# Run schema migrations
+npm run db:migrate
+
+# Start server (includes node-cron scheduler in same process)
+npm run dev:server
+
+# Start SPA dev server (separate terminal)
+npm run dev:web
+
+# Expose webhook for real Telegram bot testing
+ngrok http 3001  # or: cloudflared tunnel
+```
+
+### Scheduler (in-process, no Redis)
+
+```typescript
+// apps/server/src/web/index.ts — scheduler registered at server startup
+import cron from 'node-cron'
+import { classifyBatch } from '../classifier/index.ts'
+
+// Classification batch — every 20 minutes
+cron.schedule('*/20 * * * *', async () => {
+  await classifyBatch()
+})
+
+// Signal retention purge — daily at 03:00 UTC
+cron.schedule('0 3 * * *', async () => {
+  await purgeOldSignals()
+})
+```
+
+### Environment Variables
+
+```bash
+# .env.example
+DATABASE_URL=postgresql://mahalla:devpassword@localhost:5432/mahalla_ovozi  # contains credentials — treat as secret
+SESSION_SECRET=change_this_to_a_random_string_in_production
+BOT_TOKEN=                   # from @BotFather
+TELEGRAM_WEBHOOK_SECRET=     # random string; set same in Telegram webhook config
+AI_API_KEY=                  # Google AI API key
+AI_MODEL=gemini-2.5-flash    # configurable Gemini model selection
+NODE_ENV=development
+PORT=3001
+# RETAIN_IGNORED_SAMPLE_SIZE removed: ignored-message sampling is a Phase 2 feature.
+# Requires a processed-state field or separate table to avoid retry/idempotency issues.
+# Revisit after pilot validation confirms classification quality worth tuning.
+```
+
+---
+
+## 13. Implementation Patterns & Consistency Rules
 
 ### Naming Patterns
 
-**Database Naming:**
+**Database (Prisma):** snake_case table/column names (defined in `@@map()` and `@map()` decorators).
+Prisma generated client uses camelCase — mapped before any API response.
 
-Table names: snake_case plural (signal_messages, raw_messages, batch_health).
-Column names: snake_case (telegram_update_id, sender_display_name, hokim_related).
-Foreign keys: table_singular_id (district_id, mahalla_id).
-Boolean columns: no is_ prefix unless ambiguous (hokim_related, is_active).
-Indexes: idx_table_column (idx_signal_messages_mahalla_id).
-Enum values: lowercase strings ('water', 'electricity', 'gas', 'waste').
+**API:** camelCase JSON in all responses. Endpoint paths: plural nouns, no trailing slash.
+Query params: snake_case (`?mahalla_id=&hokim_related=&from=&to=`).
 
-**API Naming:**
-
-Endpoint paths: plural nouns, no trailing slash (/api/signals, /api/mahallas).
-Route parameters: :id pattern (/api/signals/:id/context).
-Query parameters: snake_case (?mahalla_id=&hokim_related=&from=&to=).
-
-**TypeScript and Code Naming:**
-
-Source files: kebab-case (signal-card.tsx, pipeline.ts, batch-processor.ts).
-React components: PascalCase (SignalCard, LaneGrid, DashboardPage).
-Functions and hooks: camelCase (useSignals(), classifyMessages()).
-Types and interfaces: PascalCase (Signal, Mahalla, ClassifierOutput).
-Zod schemas: TypeNameSchema (ClassifierOutputSchema, EnvSchema).
-Constants: SCREAMING_SNAKE_CASE (MAX_DRAWER_SIGNALS, BATCH_INTERVAL_MS).
-Env variables: SCREAMING_SNAKE_CASE (BOT_TOKEN, DATABASE_URL).
-
----
-
-### Structure Patterns
-
-Test files: Co-located with source. signal-card.test.tsx lives next to signal-card.tsx. Exception: scripts/check-uz-strings.ts at workspace root.
-
-Import order (top-to-bottom in every file):
-1. Node built-ins (node:fs, node:path)
-2. External packages (fastify, grammy, zod)
-3. Internal workspace (none in MVP)
-4. Relative imports (./db, ../shared/types)
-
-Module boundaries: Each module exposes one index.ts barrel only. No cross-module deep imports allowed.
-
-Shared types across API boundary: Server domain types in apps/server/src/shared/types.ts. SPA defines its own matching interfaces at the HTTP boundary. Intentionally duplicated — no shared package for MVP.
-
-  Type sync enforcement (IMP-11): After any API response shape change, BOTH files must be updated
-  in the same PR: apps/server/src/shared/types.ts AND apps/web/src/types.ts. Add a cross-reference
-  comment at the top of each file: '// Mirror of apps/web/src/types.ts — keep in sync on API changes'
-  and '// Mirror of apps/server/src/shared/types.ts — keep in sync on API changes'.
-  This duplication is a conscious MVP tradeoff. Post-pilot, consider extracting to packages/shared/.
-
----
+**TypeScript:** kebab-case files, PascalCase components, camelCase functions/hooks,
+SCREAMING_SNAKE_CASE constants and env vars.
 
 ### Format Patterns
 
-API response — direct, unwrapped:
-  GET /api/signals  returns Signal[] (not { data: Signal[] })
-  GET /api/mahallas returns Mahalla[]
-  GET /api/health   returns HealthStatus
-
-JSON field casing — camelCase in all API responses:
-Drizzle returns snake_case from DB. A dedicated mapper converts before Fastify serializes. Never expose raw DB column names.
-  DB:  { sender_display_name: 'Ali', hokim_related: true }
-  API: { senderDisplayName: 'Ali', hokimRelated: true }
-
-Date/time — ISO 8601 strings only: "classifiedAt": "2026-05-22T17:30:00Z". No Unix timestamps in API responses. SPA handles all display formatting.
-
-Null vs undefined: Optional absent fields returned as null, never undefined. Fastify silently drops undefined fields, breaking SPA contracts.
-
-Error shape (Fastify v5 standard applied consistently):
-  { "statusCode": 400, "error": "Bad Request", "message": "Human-readable description" }
-
----
-
-### Communication Patterns
-
-BullMQ job identifiers:
-  Classifier queue:
-    Queue name: 'classifier'
-    Job name:   'classify-batch'
-    Scheduler:  'classifier-20min'  (upsertJobScheduler, every 20 min)
-
-  Retention queue:
-    Queue name: 'maintenance'
-    Job name:   'purge-signals'
-    Scheduler:  'purge-signals-daily'  (upsertJobScheduler, every 24h, fires at 03:00 UTC)
-
-AI classifier settings (in ai-client.ts):
-  temperature: 0       — deterministic output for classification tasks
-  thinking mode: OFF   — disable reasoning tokens when supported by the selected model;
-                         add thinkingConfig: { thinkingBudget: 0 } if the SDK exposes it.
-  responseMimeType: 'application/json'  — required for structured output
-  Verify current syntax for thinkingConfig and responseSchema against @google/genai SDK during
-  implementation (SDK API evolves; do not rely on pre-trained knowledge of exact parameter names).
-
-Pino log levels:
-  error — Unrecoverable failures (AI down after retries, DB write failure)
-  warn  — Recoverable issues (retry attempt, invalid AI schema output)
-  info  — Normal operational events (batch started, N messages processed)
-  debug — Per-message detail, dev only, never in production
-
-Log call format — structured fields, never string interpolation:
-  Correct: log.info({ districtId, messagesProcessed }, 'Batch complete')
-  Wrong:   log.info(`Batch complete for district ${districtId}`)
-
-Frontend state — immutable React updates only:
-  Correct: setFilter(prev => ({ ...prev, mahallaId: id }))
-  Wrong:   filter.mahallaId = id; setFilter(filter)
-
----
-
-
+- API responses: direct, unwrapped (`Signal[]` not `{ data: Signal[] }`)
+- Dates: ISO 8601 UTC strings only in API responses. No Unix timestamps.
+- Null policy: absent optional fields → `null`, never `undefined`
 
 ### Process Patterns
 
-Server error handling:
-  - Throw new Error(message) with rich context from domain modules
-  - Fastify setErrorHandler catches and serializes to standard error shape
-  - AI failures: log.warn + retry 3x exponential backoff, then mark batch_health.status = 'failed'
-  - Never swallow errors silently
+**AI output — always Zod-parse before DB write:**
+```typescript
+// Correct:
+const result = ClassifierOutputSchema.safeParse(rawJson)
+if (!result.success) { logger.warn({ error: result.error }, 'Invalid AI output'); throw new Error('retry') }
+await prisma.signalMessage.create({ data: mapToDbRow(result.data) })
 
-Client error handling:
-  - TanStack Query errors: console.error in dev; silent degraded state in prod; no error modals for hokim-facing UI
-  - HTTP 401 from any API call redirects to /login
+// Wrong:
+const result = rawJson as ClassifierOutput
+```
 
-Loading state rules (UX spec enforced as code contract):
-  Initial signals fetch        > AntD Skeleton active in all 5 lane columns
-  Drawer context fetch         > AntD Skeleton active in drawer body (3 rows)
-  Yesterday / 7d preset        > AntD Skeleton active in all 5 lanes
-  Client-side filter/search    > NO loading state — instant under 300ms
+**Batch write/delete — per-message transaction (idempotency rule):**
+```typescript
+// For each message classified as 'signal', write signal + delete raw in a single transaction.
+// This prevents a crash-between-write-and-delete from leaving a stale raw_message that
+// would cause a UNIQUE constraint violation on telegram_update_id at the next batch retry.
+await prisma.$transaction([
+  prisma.signalMessage.create({ data: signalRow }),
+  prisma.rawMessage.delete({ where: { id: rawMessage.id } }),
+])
 
+// For messages classified as 'ignore', only delete (no signal written):
+await prisma.rawMessage.delete({ where: { id: rawMessage.id } })
+
+// Wrong (non-atomic — crash between these two causes retry to hit UNIQUE constraint):
+await prisma.signalMessage.create({ data: signalRow })
+await prisma.rawMessage.delete({ where: { id: rawMessage.id } })
+```
+
+**Bot intake idempotency:**
+```typescript
+// Correct:
+await prisma.rawMessage.upsert({
+  where: { telegram_update_id: updateId },
+  update: {},   // skip if exists
+  create: row
+})
+
+// Alternative (also valid):
+// Prisma doesn't have onConflictDoNothing natively; use upsert with empty update
+```
+
+**District scope — session only, never request body:**
+```typescript
+// Correct:
+const signals = await getSignals({ districtId: req.session.districtId, ...filters })
+// Wrong:
+const signals = await getSignals({ districtId: req.body.districtId })
+```
+
+**Loading state rules (UX contract):**
+```
+Initial signals fetch      → AntD Skeleton in all 5 lane columns
+Drawer context fetch       → AntD Skeleton in drawer body (3 rows)
+Yesterday / 7d preset      → AntD Skeleton in all 5 lanes
+Client-side filter/search  → NO loading state — instant under 300ms
+```
 Never use a spinner. Never show a skeleton on a client-side operation.
 
-AI output — always Zod-parse before DB write:
-  Correct:
-    const result = ClassifierOutputSchema.safeParse(rawAiJson)
-    if (!result.success) { log.warn({ error: result.error, messageId }, 'Invalid'); retry(); return }
-    await db.insert(signalMessages).values(mapToDbRow(result.data))
-  Wrong:
-    const result = rawAiJson as ClassifierOutput
+**Pino log levels and format:**
+```typescript
+// Correct: structured fields, no string interpolation
+logger.info({ districtId, messagesProcessed: 5 }, 'Batch complete')
+// Wrong:
+logger.info(`Batch complete for district ${districtId}`)
+```
 
-Bot intake idempotency:
-  Correct: await db.insert(rawMessages).values(row).onConflictDoNothing()
-  Wrong:   await db.insert(rawMessages).values(row)
+### Pre-Commit Checklist
 
-District scope — session only, never request body:
-  Correct: const signals = await getSignals({ districtId: req.session.districtId, ...filters })
-  Wrong:   const signals = await getSignals({ districtId: req.body.districtId })
-
-Telegram intake edge cases (handled in pipeline.ts):
-  Edited messages:       Telegram `edited_message` updates are ignored. Messages are captured as
-                         immutable snapshots at intake time. Re-processing edits is out of MVP scope.
-                         pipeline.ts discards updates where `update.edited_message` is defined.
-
-  Forwarded messages:    Treated as original messages. Sender = the forwarder (not the original
-                         poster). `forward_from` metadata is not stored in MVP. No special handling.
-
-  Anonymous admin posts: Telegram group anonymous admins send messages via `GroupAnonymousBot`
-                         which has `from.is_bot === true`. These are discarded by the F1 bot-sender
-                         filter. Known MVP limitation: mahalla rais posts as anonymous admin are
-                         not captured. Document in operator setup guide.
-
-Pre-filter criteria (IMP-12 — explicit definition to prevent false negatives):
-  pipeline.ts evaluates messages through three sequential filters. A message is discarded if ANY
-  filter matches. ALL THREE criteria must be satisfied to reach the AI classifier.
-
-  F1 — Bot sender filter:
-    Discard if `update.message.from.is_bot === true`.
-    Rationale: bot-generated messages are structural noise, not resident signals.
-
-  F2 — Non-text type filter:
-    Discard if `update.message.text` is undefined AND `update.message.caption` is undefined.
-    Accept if either field has a non-empty string value (even a single character).
-    Rationale: photos/videos/stickers/polls with no textual content are out of MVP scope.
-
-  F3 — Trivial content filter (NARROW — text length thresholds are FORBIDDEN):
-    Discard ONLY if the text matches one of these exclusively:
-      a. Bot command: text starts with '/' (e.g. /start, /help)
-      b. Pure emoji: text matches /^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27FF}\s]+$/u with no alphanumeric chars
-      c. Empty string after trimming whitespace
-    DO NOT discard based on character count. Short civic texts like 'gaz?', 'suv?', 'tok?', 'svet?'
-    MUST pass to the AI classifier. These are the highest false-negative risk (PRD validation notes).
-    Any expansion of F3 rules requires real mahalla data validation first.
-
-Batch processor district scope (CRIT-4):
-  A single BullMQ job (`classify-batch`) processes ALL districts sequentially in one run.
-  There is ONE job per scheduler tick — not one job per district. This ensures:
-  - No concurrent jobs racing over the same district's raw_messages.
-  - No wasted AI calls from duplicate processing (the signal_messages UNIQUE constraint
-    would catch duplicates, but wasted AI cost is still undesirable).
-  - Simple, predictable execution: district 1 → district 2 → ... → done.
-  At pilot scale (1 district), this is trivially correct. Post-pilot with multiple districts,
-  evaluate per-district BullMQ job keys with deduplication if sequential processing is too slow.
-
-Batch partial-failure strategy:
-  The batch processor handles each raw message sequentially. Write each successful signal immediately
-  without waiting for the full batch to complete:
-
-  1. For each active district (sequentially):
-     a. Fetch all pending raw_messages for the district.
-     b. For each message:
-        i.  Call AI classifier.
-        ii. Zod-parse the result.
-        iii. On success: db.insert(signalMessages) + db.delete(rawMessages by id).
-        iv. On AI failure after 3 retries: log.error, skip this message, do NOT delete raw_message.
-            The raw_message is retained for retry in the next batch run.
-     c. After processing all messages for the district:
-        i.  If all succeeded: batch_health.status = 'ok', completed_at = now().
-        ii. If any failed: batch_health.status = 'failed', error_message = summary of failed IDs.
-            Already-written signals from the same batch are retained (not rolled back).
-  2. Do not block on already-committed writes. Partial success is better than full rollback.
-
-Worker graceful shutdown (IMP-9):
-  The worker entry point (`apps/server/src/worker/index.ts`) must register SIGTERM and SIGINT
-  handlers to drain in-flight jobs before the container stops:
-
-    const worker = new Worker('classifier', processorFn, { connection: redis })
-    const gracefulShutdown = async (signal: string) => {
-      log.info({ signal }, 'Worker shutting down')
-      await worker.close()    // drains in-flight jobs, stops accepting new ones
-      await redis.quit()
-      process.exit(0)
-    }
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
-    process.on('SIGINT',  () => gracefulShutdown('SIGINT'))
-
-  Without this, a mid-AI-call container kill leaves the BullMQ job in a stalled state.
-  BullMQ stall detection will retry it eventually, but this wastes AI API calls.
-  With graceful shutdown, the current message completes or the job is released cleanly.
+Before any implementation story is marked done:
+1. `npm run lint` passes
+2. `npm run test` passes (includes check-uz-strings.ts)
+3. No snake_case field names in Express route return values
+4. No `districtId` sourced from request body or query params
+5. No Latin Uzbek strings visible in the dashboard UI
 
 ---
 
-### Enforcement Guidelines
+## 14. Project Structure & Boundaries
 
-All AI Agents MUST:
-  - snake_case DB table/column names; camelCase all API JSON fields; PascalCase React components
-  - Co-locate test files with source (*.test.ts beside source file)
-  - Use a dedicated mapper for snake_case DB rows to camelCase API responses; never expose raw DB fields in API output
-  - Use structured pino fields in all log calls; no string interpolation in log messages
-  - Show Skeleton only on API-boundary transitions; no loading indicator for client-side operations
-  - Zod-parse all AI output before DB write; treat parse failures as retryable errors
-  - Inject districtId exclusively from req.session.districtId; reject any request body or param source
-  - Use onConflictDoNothing() on every raw_messages insert
-  - Return null for absent optional fields; never undefined from Fastify route handlers
-  - All user-facing UI strings must be Uzbek Cyrillic — stored in strings.ts only; no inline Latin Uzbek strings in components
-  - The hard-block unsupported-screen message is: "Маҳалла Овози фақат компьютер экранида ишлайди" (not Latin)
+### Module Boundaries (no cross-module DB access)
 
-Pre-PR verification checklist:
-  1. npm run lint passes
-  2. npm run test passes (includes check-uz-strings.ts)
-  3. No snake_case field names in Fastify route handler return values
-  4. No districtId sourced from request body or query params
-  5. No Latin Uzbek strings visible in the dashboard UI (check strings.ts against the table in ux-consistency-patterns.md)
+| Module | Writes | Reads | Deletes |
+|---|---|---|---|
+| `bot/` | `raw_messages` | `mahallas` | — |
+| `classifier/` | `signal_messages`, `batch_health` | `raw_messages` | `raw_messages` (post-classification) |
+| `signals/` | — | `signal_messages`, `mahallas` | — |
+| `health/` | — | `batch_health`, `mahallas` | — |
+| `auth/` | `users`, sessions | `users` | — |
+| `ops/` | `raw_messages` (simulator) | all tables (read-only ops queries) | — |
 
----
-
-## Project Structure and Boundaries
-
-### Requirements to Structure Mapping
+### FR-to-Module Mapping
 
 | FR Category | Module / Directory |
 |---|---|
-| Signal Display (FR1-6) | apps/web/src/pages/dashboard-page.tsx, apps/web/src/components/ |
-| Context Drawer (FR7-10) | apps/web/src/components/context-drawer/ |
-| Filtering and Search (FR11-15) | apps/web/src/components/filter-bar/, apps/web/src/hooks/use-filters.ts |
-| Message Intake (FR16-19) | apps/server/src/bot/, apps/server/src/bot/filters/pipeline.ts |
-| AI Classification (FR20-25) | apps/server/src/classifier/ |
-| Signal Storage (FR26-28) | apps/server/src/signals/, drizzle/ |
-| Auth and Access (FR29-32) | apps/server/src/auth/ |
-| Operational Health (FR33-34) | apps/server/src/health/, apps/web/src/components/delay-banner.tsx |
+| Signal Display (FR1–6) | `apps/web/src/pages/dashboard-page.tsx`, `apps/web/src/components/` |
+| Context Drawer (FR7–10) | `apps/web/src/components/context-drawer/` |
+| Filtering & Search (FR11–15) | `apps/web/src/components/filter-bar/`, `apps/web/src/hooks/use-filters.ts` |
+| Message Intake (FR16–19) | `apps/server/src/bot/`, `apps/server/src/bot/filters/pipeline.ts` |
+| AI Classification (FR20–25) | `apps/server/src/classifier/` |
+| Signal Storage (FR26–28) | `apps/server/src/signals/`, `prisma/schema.prisma` |
+| Auth & Access (FR29–32) | `apps/server/src/auth/` |
+| Operational Health (FR33–34) | `apps/server/src/health/`, `apps/web/src/components/delay-banner.tsx` |
 
----
-
-### Complete Project Directory Structure
+### End-to-End Data Flow
 
 ```
-mahalla-ovozi/
-+-- .env                              < secrets (gitignored)
-+-- .env.example                      < template with all required keys
-+-- .gitignore
-+-- package.json                      < npm workspaces root { "workspaces": ["apps/*"] }
-+-- tsconfig.json                     < root base strict TypeScript config
-+-- drizzle.config.ts                 < Drizzle Kit config (points to apps/server schema)
-+-- docker-compose.yml                < production: postgres, redis, server, worker, nginx
-+-- docker-compose.dev.yml            < dev overrides: tsx watch, no nginx
-+-- scripts/
-¦   L-- check-uz-strings.ts           < Vitest test: scans strings.ts for Latin slip-throughs
-+-- drizzle/
-¦   L-- migrations/                   < generated SQL migration files (committed to repo)
-+-- nginx/
-¦   L-- default.conf                  < reverse proxy + HTTPS termination config
-+-- apps/
-¦   +-- server/
-¦   ¦   +-- package.json
-¦   ¦   +-- tsconfig.json             < extends root; compiles to dist/
-¦   ¦   +-- Dockerfile
-¦   ¦   L-- src/
-¦   ¦       +-- shared/
-¦   ¦       ¦   +-- db.ts             < Drizzle db client (postgres.js driver)
-¦   ¦       ¦   +-- env.ts            < EnvSchema (Zod) + validated config export
-¦   ¦       ¦   +-- types.ts          < Signal, Mahalla, HealthStatus, ClassifierOutput types
-¦   ¦       ¦   L-- schema/
-¦   ¦       ¦       +-- index.ts      < re-exports all Drizzle table schemas
-¦   ¦       ¦       +-- raw-messages.ts
-¦   ¦       ¦       +-- signal-messages.ts
-¦   ¦       ¦       +-- mahallas.ts
-¦   ¦       ¦       +-- districts.ts
-¦   ¦       ¦       +-- users.ts
-¦   ¦       ¦       L-- batch-health.ts
-¦   ¦       +-- bot/
-¦   ¦       ¦   +-- index.ts          < grammY Bot instance; registers message handlers
-¦   ¦       ¦   +-- webhook.ts        < Fastify route POST /webhook (webhookCallback)
-¦   ¦       ¦   L-- filters/
-¦   ¦       ¦       L-- pipeline.ts   < ALL pre-filter logic (F1 bot, F2 type, F3 trivial content)
-¦   ¦       +-- classifier/
-¦   ¦       ¦   +-- index.ts          < classifyMessages() public function
-¦   ¦       ¦   +-- ai-client.ts      < @google/genai client factory (AI_PROVIDER + AI_MODEL from env)
-¦   ¦       ¦   +-- prompt.ts         < classification prompt template + few-shot examples
-¦   ¦       ¦   +-- schema.ts         < ClassifierOutputSchema (Zod) + ClassifierOutput type
-¦   ¦       ¦   L-- batch-processor.ts < fetches pending raw_messages, calls AI, writes signal_messages
-¦   ¦       +-- signals/
-¦   ¦       ¦   +-- index.ts          < getSignals(), getSignalContext() public functions
-¦   ¦       ¦   +-- query.ts          < Drizzle query builders for all signal DB queries
-¦   ¦       ¦   L-- mapper.ts         < DB snake_case row -> camelCase API response shape
-¦   ¦       +-- auth/
-¦   ¦       ¦   +-- index.ts          < registerAuthRoutes() Fastify plugin
-¦   ¦       ¦   +-- routes.ts         < POST /api/auth/login, POST /api/auth/logout
-¦   ¦       ¦   +-- middleware.ts     < requireAuth hook: validates session, injects districtId
-¦   ¦       ¦   L-- password.ts       < argon2 hash + verify helpers
-¦   ¦       +-- health/
-¦   ¦       ¦   +-- index.ts          < registerHealthRoutes() Fastify plugin
-¦   ¦       ¦   +-- routes.ts         < GET /api/health
-¦   ¦       ¦   L-- query.ts          < reads batch_health table, checks BullMQ queue depth
-¦   ¦       +-- web/
-¦   ¦       ¦   L-- index.ts          < Fastify server entry point; registers all plugins + starts server
-¦   ¦       L-- worker/
-¦   ¦           L-- index.ts          < BullMQ worker entry point; upsertJobScheduler 20-min interval
-¦   L-- web/
-¦       +-- package.json
-¦       +-- tsconfig.json             < extends root
-¦       +-- vite.config.ts            < Vite config; /api proxy -> server in dev
-¦       +-- index.html
-¦       L-- src/
-¦           +-- main.tsx              < React entry; wraps with QueryClientProvider + ConfigProvider
-¦           +-- theme.ts              < AntD ConfigProvider mahallaTheme token overrides
-¦           +-- strings.ts            < typed Uzbek Cyrillic UI string dictionary (ALL user-facing copy)
-¦           +-- types.ts              < API response interface types (mirrors server types at HTTP boundary)
-¦           +-- router.tsx            < React Router v6: /login and / routes with auth guard
-¦           +-- api/
-¦           ¦   +-- signals.ts        < useSignals() TanStack Query hook
-¦           ¦   +-- mahallas.ts       < useMahallas() hook
-¦           ¦   +-- health.ts         < useHealth() hook (60s refetchInterval)
-¦           ¦   L-- auth.ts           < login(), logout() mutations
-¦           +-- hooks/
-¦           ¦   L-- use-filters.ts    < filter state: mahalla, time-range, keyword
-¦           +-- pages/
-¦           ¦   +-- dashboard-page.tsx  < owns data fetch, filter state, drawer state; groups signals by lane
-¦           ¦   L-- login-page.tsx
-¦           L-- components/
-¦               +-- filter-bar/
-¦               ¦   +-- filter-bar.tsx        < sticky 56px bar: chips + select + search
-¦               ¦   +-- time-range-chips.tsx  < 1h/3h/6h/Bugyn/Kecha/7kun preset buttons (Cyrillic labels)
-¦               ¦   +-- mahalla-select.tsx    < AntD Select wrapper
-¦               ¦   L-- keyword-search.tsx    < AntD Input.Search with 300ms debounce
-¦               +-- lane-grid/
-¦               ¦   +-- lane-grid.tsx         < flex row; renders 5 LaneColumns; no reflow on drawer open
-¦               ¦   L-- lane-column.tsx       < sticky header + @tanstack/react-virtual scroll
-¦               +-- signal-card/
-¦               ¦   +-- signal-card.tsx       < pure presentational: left border + meta + text + badges
-¦               ¦   L-- signal-card.test.tsx
-¦               +-- context-drawer/
-¦               ¦   +-- context-drawer.tsx    < AntD Drawer wrapper; skeleton/content/empty states
-¦               ¦   L-- drawer-signal-card.tsx < drawer variant: no 3-line clamp, no action menus
-¦               +-- delay-banner.tsx           < AntD Alert warning; shown when last_batch_at >= 25min
-¦               L-- unsupported-screen.tsx     < <1024px hard block message (CSS @media only, no JS)
+[Real Telegram group]
+        ↓
+POST /webhook → grammY → pipeline.ts pre-filter
+        ↓                     ↓ (discarded: logged, counted)
+  raw_messages (PostgreSQL)
+        ↓
+  node-cron (every 20 min) → classifyBatch()
+        ↓
+  ai-client.ts → @google/genai → ClassifierOutputSchema.safeParse()
+        ↓
+  signal_messages written | raw_messages deleted | batch_health updated
+        ↓
+SPA GET /api/signals (60s poll) ← signals/query.ts reads signal_messages
+SPA GET /api/health  (60s poll) ← health/query.ts reads batch_health
+SPA GET /api/signals/:id/context ← category + mahalla_id + time_range
+
+[Message Simulator (Ops Console)]
+        ↓
+POST /api/ops/simulate-message → ops/simulator.ts → raw_messages
+        ↓ (same pipeline from here)
+  node-cron or manual trigger → classifyBatch() → ...
 ```
 
 ---
 
-### Architectural Boundaries
+## 15. Architecture Validation
 
-**API Boundaries (server to SPA):**
-- All SPA data flows through REST endpoints: `/api/signals`, `/api/mahallas`, `/api/health`, `/api/signals/:id/context`
-- Auth state flows via session cookie set on `POST /api/auth/login`; all other API routes require valid session
-- Vite dev proxy (`/api -> http://localhost:3001`) bridges SPA to local Fastify in development
-- Production: Nginx routes `/api/*` and `/webhook` to the `server` container; all other paths serve the Vite static build
+### Requirements Coverage
 
-**Component Boundaries (SPA):**
-- `DashboardPage` — owns all server state (TanStack Query) and all UI state (filter, activeSignalId, drawerOpen); the sole data orchestrator
-- `LaneGrid` — layout + virtual scroll only; receives pre-grouped `SignalsByCategory` + `activeSignalId` (prop from DashboardPage, not internal state) + `onCardClick`; manages virtual scroll instances internally; never fetches data
-- `SignalCard` — pure presentational; receives `signal`, `isActive`, `categoryColor`, `onClick`; zero internal state
-- `FilterBar` — reads filter state from `useFilters()` hook; emits changes up to `DashboardPage`
+All 34 functional requirements have architectural coverage.
+Tone-related portions of FR4, FR23 are removed per scope decision:
+- FR4 updated: signal item shows timestamp, sender, mahalla, raw text, hokim indicator (**no tone badge**)
+- FR23 updated: AI assigns category, hokim_related, short_label (**no tone**)
 
-**Data Boundaries:**
-- `apps/server/src/shared/schema/` — single source of truth for all DB table definitions; Drizzle Kit reads this for migration generation
-- `apps/server/src/signals/mapper.ts` — the only location where DB snake_case rows are converted to camelCase API shapes
-- `apps/server/src/classifier/schema.ts` — the only location where AI output is Zod-parsed and typed
-- `apps/server/src/bot/filters/pipeline.ts` — the only location where pre-filter rules are evaluated; no filtering logic anywhere else
+All 15 NFRs addressed:
+- NFR5 (HTTPS): Phase 2 concern (Nginx + Let's Encrypt). Phase 1: local HTTP is acceptable.
+- NFR9 (disk encryption): VPS-level; operator responsibility in Phase 2.
+- NFR11 (99% webhook uptime): Phase 2 target with Nginx + health monitoring.
+- NFR13 (daily backup): Phase 2 concern (pg_dump cron).
 
-**Service Boundaries (no cross-module DB access):**
-- `bot/` — writes only to `raw_messages`
-- `classifier/` — reads `raw_messages`, writes `signal_messages` + `batch_health`, deletes processed `raw_messages`
-- `signals/` — reads `signal_messages` + `mahallas` only
-- `health/` — reads `batch_health` + BullMQ queue depth only
-- `auth/` — reads/writes `users` + manages session store
+### Implementation Readiness
 
----
+**Critical decisions resolved:**
+1. Drawer scope: `mahalla_id` ✅
+2. AI model: configurable Gemini model via `AI_MODEL` env var; provider is Google AI ✅
+3. Pre-filter thresholds: provisional; isolated in `pipeline.ts` for easy tuning ✅
+4. Session store: PostgreSQL-backed via `connect-pg-simple` ✅
+5. Ignored message sampling: deferred to Phase 2 (requires processed-state tracking) ✅
 
-### Integration Points
-
-**External integrations:**
-- Telegram Bot API: `apps/server/src/bot/` via grammY `webhookCallback`
-- AI provider (Gemini-family): `apps/server/src/classifier/ai-client.ts` via `@google/genai`
-
-**End-to-end data flow:**
-```
-Telegram -> POST /webhook -> grammY -> pipeline.ts pre-filter -> raw_messages (PostgreSQL)
-                                                                        |
-                                                               BullMQ scheduler (every 20 min)
-                                                                        |
-                                                              batch-processor.ts fetches pending
-                                                                        |
-                                                              ai-client.ts calls AI provider
-                                                                        |
-                                                              ClassifierOutputSchema.safeParse()
-                                                                        |
-                                                              signal_messages written
-                                                              raw_messages deleted
-                                                              batch_health updated
-                                                                        |
-SPA GET /api/signals (60s poll)  <-  signals/query.ts reads signal_messages
-SPA GET /api/health  (60s poll)  <-  health/query.ts reads batch_health
-SPA GET /api/signals/:id/context <-  signals/query.ts: category + mahalla_id + time_range
-```
+**Package version conflicts: NONE**
+Express v4 + grammY `webhookCallback(bot, 'express', { secretToken })` — confirmed ✅
+Prisma v7.8.0 + `@prisma/adapter-pg` driver adapter — confirmed ✅
+AntD v6.x + React Router v6.30.x + TanStack Query v5 — compatible ✅
+node-cron v4.x + `*/20 * * * *` syntax — confirmed ✅
+`@google/genai` + `z.toJSONSchema(schema)` (Zod v4 module-level function) — confirmed ✅
 
 ---
 
-### Development Workflow Integration
+## 16. Phase 2 Roadmap (Not Specified Here)
 
-**Root package.json scripts:**
-```json
-{
-  "scripts": {
-    "dev:server": "tsx watch apps/server/src/web/index.ts",
-    "dev:worker": "tsx watch apps/server/src/worker/index.ts",
-    "dev:web":    "vite --config apps/web/vite.config.ts",
-    "lint":       "eslint apps/",
-    "test":       "vitest run",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate":  "drizzle-kit migrate",
-    "db:studio":   "drizzle-kit studio"
-  }
-}
-```
+Phase 2 covers production hardening after Phase 1 client validation. A separate architecture
+document will be written after Phase 1 pilot review, informed by real usage data.
 
-**Local dev requirements:**
-- ngrok or Cloudflare Tunnel to expose `POST /webhook` for Telegram bot testing
-- `.env` populated from `.env.example` before first run
-- `npm run db:migrate` before first `dev:server` start
+**Known Phase 2 areas:**
+- Docker Compose with 5 services (postgres, redis, server, worker, nginx)
+- BullMQ + Redis replacing `node-cron` (robust retry, job persistence, queue visibility)
+- Nginx + Let's Encrypt (HTTPS, HTTP redirect)
+- Session cookie `secure: true` (HTTPS enforced)
+- Production `pg_dump` backup cron to external object storage
+- Worker process separated from API server (two Docker containers, one image)
+- CI/CD pipeline (GitHub Actions)
+- Ops Console disabled in production (already gated by NODE_ENV)
+- Managed PostgreSQL/Redis post-pilot cost evaluation
 
-**Production deploy:**
-```bash
-git pull origin main
-docker compose up --build -d
-# server container entrypoint: npx drizzle-kit migrate && node dist/web/index.js
-# worker container entrypoint: node dist/worker/index.js
-```
-
+**Intentional Phase 1 simplifications that are NOT technical debt:**
+- `node-cron` → will be replaced by BullMQ in Phase 2, by design
+- `connect-pg-simple` → may be replaced by Redis-backed store in Phase 2, or kept
+- No HTTPS locally → Phase 2 responsibility
+- Single process (server + scheduler) → Phase 2 splits into server + worker
 
 ---
 
-## Architecture Validation Results
+## 17. Implementation Handoff
 
-### Coherence Validation
+### AI Agent Guidelines
 
-**Decision Compatibility:** All verified package versions are mutually compatible.
-fastify v5.8.5 + grammY webhookCallback(bot, "fastify"), drizzle-orm v0.45.2 + postgres.js driver,
-bullmq v5 upsertJobScheduler, @tanstack/react-query v5 + antd v5 — no conflicts.
-
-**Pattern Consistency:** snake_case DB / camelCase API / PascalCase component naming is internally
-consistent throughout all sections. mapper.ts pattern, onConflictDoNothing idempotency, and
-session-only districtId injection are unambiguous and enforced by the pre-PR checklist.
-
-**Structure Alignment:** Module directories (bot/, classifier/, signals/, auth/, health/, shared/,
-web/, worker/) map exactly to FR categories and architectural decisions. The server/worker Docker
-service split matches the two-process runtime requirement. strings.ts is the enforced single source
-for all Uzbek Cyrillic UI copy.
-
----
-
-### Requirements Coverage Validation
-
-All 34 functional requirements have explicit architectural support across modules, API endpoints,
-and SPA components. All 15 NFRs are addressed:
-
-13 of 15 NFRs are fully architecturally enforced. 2 NFRs are delegated:
-- Disk encryption: VPS-level infrastructure concern; not application-level; operator responsibility
-- WCAG 2.1 AA: AntD v5 provides accessible components by default; verification deferred to QA
-
-FR coverage summary:
-- Signal Display (FR1-6): DashboardPage + LaneGrid + LaneColumn + SignalCard; hokim lane via client-side grouping
-- Context Drawer (FR7-10): ContextDrawer + GET /api/signals/:id/context; scope = mahalla_id (resolved)
-- Filtering and Search (FR11-15): FilterBar + useFilters(); client-side for 1h/3h/6h/Today; server fetch for Yesterday/7d
-- Message Intake (FR16-19): grammY webhook + pipeline.ts pre-filters; onConflictDoNothing idempotency
-- AI Classification (FR20-25): classifier/ module; Zod output schema; 3x retry; configurable AI_PROVIDER/AI_MODEL env
-- Signal Storage (FR26-28): Drizzle schema (raw_messages, signal_messages); 90-day retention; RETAIN_IGNORED_SAMPLE_SIZE flag
-- Auth and Access (FR29-32): auth/ module; argon2 passwords; Redis session; requireAuth middleware; districtId injection
-- Operational Health (FR33-34): GET /api/health; batch_health table; DelayBanner; 60s poll; two-audience design
-
----
-
-### Implementation Readiness Validation
-
-All 5 open questions from Step 2 are fully resolved:
-1. Drawer scope: mahalla_id (not telegram_chat_id)
-2. AI model/provider: configurable via env (AI_PROVIDER, AI_MODEL)
-3. Pre-filter thresholds: provisional until real data; isolated in pipeline.ts for easy tuning
-4. Session store: Redis-backed via @fastify/session + ioredis
-5. Ignored message sampling: RETAIN_IGNORED_SAMPLE_SIZE env flag, default 0
-
-All critical decisions have confirmed package versions. All 9 conflict points are addressed
-with concrete code examples. Pre-PR checklist gives agents unambiguous pass/fail criteria.
-
----
-
-### Gap Analysis Results
-
-**Critical Gaps: NONE**
-
-**Important Gaps (non-blocking, captured as implementation story tasks):**
-
-1. DB schema column-level detail (types, lengths, defaults) — captured in the Drizzle schema definition story
-2. Operator seed script — add apps/server/src/shared/seed.ts as part of the auth implementation story
-3. pg_dump backup cron — add scripts/backup.sh to project structure before pilot launch
-
-**Nice-to-Have Gaps (deferred post-pilot):**
-- OpenAPI/Swagger API documentation
-- E2E Playwright tests (via bmad-qa-generate-e2e-tests skill)
-- docker-compose.test.yml for isolated test environment
-
----
-
-### Architecture Completeness Checklist
-
-**Requirements Analysis**
-- [x] Project context thoroughly analyzed
-- [x] Scale and complexity assessed
-- [x] Technical constraints identified
-- [x] Cross-cutting concerns mapped
-
-**Architectural Decisions**
-- [x] Critical decisions documented with versions
-- [x] Technology stack fully specified
-- [x] Integration patterns defined
-- [x] Performance considerations addressed
-
-**Implementation Patterns**
-- [x] Naming conventions established
-- [x] Structure patterns defined
-- [x] Communication patterns specified
-- [x] Process patterns documented
-
-**Project Structure**
-- [x] Complete directory structure defined
-- [x] Component boundaries established
-- [x] Integration points mapped
-- [x] Requirements to structure mapping complete
-
----
-
-### Architecture Readiness Assessment
-
-**Overall Status: READY FOR IMPLEMENTATION**
-
-**Confidence Level: High**
-
-**Key Strengths:**
-- All open architectural questions resolved before implementation begins
-- Two-process runtime (server/worker) explicitly isolated — no coupling risk
-- Cross-cutting concerns (districtId scope, Uzbek strings, AI output validation) have enforceable, concrete patterns
-- File-level project structure eliminates structural ambiguity for AI agents
-- All package versions verified against live sources (May 2026)
-
-**Areas for Future Enhancement:**
-- Add API versioning (/api/v1/) when a second client or mobile app is introduced
-- Move to managed PostgreSQL/Redis after pilot validates load assumptions
-- Add GitHub Actions CI pipeline after first stable deploy
-- Add prefers-reduced-motion CSS support for accessibility completeness
-
----
-
-### Implementation Handoff
-
-**AI Agent Guidelines:**
-- Follow all architectural decisions exactly as documented in this file
-- Apply the implementation patterns and pre-PR enforcement checklist to every story
-- Respect module boundaries — no cross-module DB access; all access through owning module public functions
+- Follow all architectural decisions exactly as documented
+- Apply implementation patterns and pre-commit checklist to every story
+- Respect module boundaries — no cross-module DB access; all access through owning module's public functions
 - Refer to this document for all architectural questions before inventing solutions
+- See [architecture-ops-console.md](./architecture-ops-console.md) for Ops Console specification
 
-**First Implementation Story — Workspace Scaffold:**
-1. Root package.json with npm workspaces config (workspaces: ["apps/*"])
-2. npm create vite@latest apps/web -- --template react-ts
-3. mkdir apps/server && npm init -y in apps/server
-4. Root tsconfig.json (strict mode base config)
-5. docker-compose.yml with all 5 services (postgres, redis, server, worker, nginx)
-6. .env.example with all 4 required secrets documented
-7. drizzle.config.ts pointing to apps/server schema
+### First Implementation Story — Workspace Scaffold
 
-
-
+1. Root `package.json` with npm workspaces config (`"workspaces": ["apps/*"]`)
+2. `npm create vite@latest apps/web -- --template react-ts`
+3. `mkdir apps/server && cd apps/server && npm init -y`
+4. Root `tsconfig.json` (strict mode base config)
+5. `prisma/schema.prisma` with all 6 models
+6. Run `npx prisma migrate dev --name init`
+7. `.env.example` with all required variables documented
+8. Local PostgreSQL container or install (instructions in README)

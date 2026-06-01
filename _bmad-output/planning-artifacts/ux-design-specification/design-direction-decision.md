@@ -28,7 +28,7 @@ Three interactive design directions were generated and evaluated in [`ux-design-
 - Start with Direction A card dimensions, gap sizes, and filter bar as the production baseline.
 - The context drawer pattern from the prototype supports the 250ms slide-in + skeleton shimmer + breadcrumb header pattern, but implementation must follow the corrected drawer context rule in `core-user-experience.md`.
 - The delay banner (amber, non-blocking, below filter bar) is confirmed as the correct placement from the prototype.
-- Tone badge legibility at 10–11px on muted pill backgrounds is confirmed as readable at desktop viewing distance.
+- Signal card left-border category accents are confirmed as readable at desktop viewing distance.
 
 ## Elements Noted from Other Directions
 

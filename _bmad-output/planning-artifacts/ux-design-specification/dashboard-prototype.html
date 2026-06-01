@@ -1,3 +1,23 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════════════╗
+  ║  HISTORICAL PROTOTYPE — DO NOT USE AS IMPLEMENTATION REFERENCE          ║
+  ╠══════════════════════════════════════════════════════════════════════════╣
+  ║  Created:    2026-05-21 (UX design exploration)                         ║
+  ║  Deprecated: 2026-06-01                                                 ║
+  ║                                                                          ║
+  ║  This file is a static HTML mockup created during the UX design phase   ║
+  ║  to explore layout and interaction patterns. It is OUTDATED:            ║
+  ║                                                                          ║
+  ║  STATIC DATA: All signal data is hardcoded. The real implementation    ║
+  ║  fetches live data from GET /api/signals via TanStack Query.           ║
+  ║                                                                          ║
+  ║  AUTHORITATIVE IMPLEMENTATION REFERENCES:                               ║
+  ║  - UI requirements: ux-design-specification/*.md (not this file)        ║
+  ║  - Component spec:  component-strategy.md                               ║
+  ║  - API contracts:   architecture.md Section 7                           ║
+  ║  - Data model:      architecture.md Section 4                           ║
+  ╚══════════════════════════════════════════════════════════════════════════╝
+-->
 <!DOCTYPE html>
 <html lang="uz" dir="ltr">
 
@@ -42,15 +62,6 @@
       --cat-gaz-bg: #F0F7F6;
       --cat-chiqindi-bg: #F5F7F0;
 
-      /* Tone Badge Colors */
-      --tone-shikoyat-bg: #FEE2E2;
-      --tone-shikoyat-text: #991B1B;
-      --tone-savol-bg: #E0F2FE;
-      --tone-savol-text: #075985;
-      --tone-eylon-bg: #F3F4F6;
-      --tone-eylon-text: #374151;
-      --tone-tashakkur-bg: #DCFCE7;
-      --tone-tashakkur-text: #166534;
 
       /* Spacing */
       --space-1: 4px;
@@ -469,37 +480,6 @@
       gap: var(--space-2);
     }
 
-    /* Tone Badge */
-    .tone-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      line-height: 1;
-      cursor: default;
-    }
-
-    .tone-badge--shikoyat {
-      background: var(--tone-shikoyat-bg);
-      color: var(--tone-shikoyat-text);
-    }
-
-    .tone-badge--savol {
-      background: var(--tone-savol-bg);
-      color: var(--tone-savol-text);
-    }
-
-    .tone-badge--eylon {
-      background: var(--tone-eylon-bg);
-      color: var(--tone-eylon-text);
-    }
-
-    .tone-badge--tashakkur {
-      background: var(--tone-tashakkur-bg);
-      color: var(--tone-tashakkur-text);
-    }
 
     .hokim-star {
       font-size: 12px;
@@ -961,49 +941,49 @@
         sender: 'Дилноза Юсупова', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '08:42', timeRel: '10 соат 22 дақ. олдин',
         text: 'Ҳурматли ҳоким, биз маҳалламизда 3 кундан бери сув йўқ. Болаларимиз мактабга кира олмаяпти. Зудлик билан ёрдам керак.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 's02', category: 'suv', hokim_related: false,
         sender: '@murod_tashkentiy', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '09:05', timeRel: '10 соат олдин',
         text: 'Олмазорда сув муаммоси ҳал бўлмаяпти. Кеча ҳам бугун ҳам сув йўқ эди.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 's03', category: 'suv', hokim_related: false,
         sender: 'Нодирбек Холматов', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
         time: '09:15', timeRel: '9 соат 49 дақ. олдин',
         text: 'Сув тўсатдан узилди, трубани кўрсак сув ўтмаяпти. Коммунал хизматга қўнғироқ қилдик — жавоб йўқ.',
-        tone: 'savol', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 's04', category: 'suv', hokim_related: false,
         sender: 'Зулфия Раҳимова', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
         time: '11:30', timeRel: '7 соат 34 дақ. олдин',
         text: 'Сувимиз рангли чиқяпти, ичишга ярамайди. Буни ким текшириши мумкин?',
-        tone: 'savol', text_source: 'caption', caption_text: 'сув ранги'
+        text_source: 'caption', caption_text: 'сув ранги'
       },
       {
         id: 's05', category: 'suv', hokim_related: true,
         sender: 'Бекзод Мирзаев', mahalla: 'Юлдуз маҳалласи', mahalla_id: 'yulduz',
         time: '14:10', timeRel: '5 соат 34 дақ. олдин',
         text: 'Ҳоким жаноблари, биз маҳалламиздаги сув насосхонаси 2 кундан бери ишламаяпти. 400 хонадон зарар кўрмоқда.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 's06', category: 'suv', hokim_related: false,
         sender: 'Резидент', mahalla: 'Баҳор маҳалласи', mahalla_id: 'bahor',
         time: '16:20', timeRel: '3 соат 24 дақ. олдин',
         text: 'Баҳор маҳалласида сув таъминоти яхшиланди. Раҳмат коммунал хизматга!',
-        tone: 'tashakkur', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 's07', category: 'suv', hokim_related: false,
         sender: 'Малика Эшматова', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
         time: '17:45', timeRel: '1 соат 59 дақ. олдин',
         text: 'Навбаҳорда сув қачон тикланади? Кечдан бери сув йўқ. Яна бугун ёлворамиз.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
 
       /* ── ELEKTR (Electricity) ── */
@@ -1012,63 +992,63 @@
         sender: 'Санжар Турсунов', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '07:30', timeRel: '11 соат 34 дақ. олдин',
         text: 'Олмазорда кечадан бери свет йўқ. Музлаткичлардаги маҳсулотлар бузилмоқда.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e02', category: 'elektr', hokim_related: false,
         sender: 'Нилуфар Хасанова', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '07:58', timeRel: '11 соат 6 дақ. олдин',
         text: 'Электр узилмоқда. Болаларим уйда, ҳаво иссиқ, кондиционер ишламаяпти.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e03', category: 'elektr', hokim_related: false,
         sender: '@olmazor_chat', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '08:15', timeRel: '10 соат 49 дақ. олдин',
         text: 'Умуман Олмазор кўчасида трансформатор ёнган. Ремонт қачон бошланади?',
-        tone: 'savol', text_source: 'caption'
+        text_source: 'caption'
       },
       {
         id: 'e04', category: 'elektr', hokim_related: true,
         sender: 'Ҳамид Расулов', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '09:30', timeRel: '9 соат 34 дақ. олдин',
         text: 'Ҳоким жаноблари, Олмазор маҳалласида трансформатор 12 соатдан бери ишламаяпти. Зудлик билан чора кўрилсин!',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e05', category: 'elektr', hokim_related: false,
         sender: 'Умида Сафарова', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
         time: '12:00', timeRel: '7 соат 4 дақ. олдин',
         text: 'Гулшанда электр кесилиши кам бўляпти, яхши. Шу ҳолатда давом этсин.',
-        tone: 'tashakkur', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e06', category: 'elektr', hokim_related: false,
         sender: 'Жасур Қодиров', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
         time: '14:45', timeRel: '4 соат 19 дақ. олдин',
         text: 'Навбаҳорда электр 5 марта кесилди бугун. Ишхонамда компьютерлар бузиляпти.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e07', category: 'elektr', hokim_related: false,
         sender: 'Камола Азимова', mahalla: 'Юлдуз маҳалласи', mahalla_id: 'yulduz',
         time: '16:00', timeRel: '3 соат 4 дақ. олдин',
         text: 'Юлдуз маҳалласида электр графикда берилмаяпти. Жадвалда 6 соат деган эди, аммо 9 соат кесилди.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e08', category: 'elektr', hokim_related: false,
         sender: 'Резидент', mahalla: 'Баҳор маҳалласи', mahalla_id: 'bahor',
         time: '17:10', timeRel: '2 соат 34 дақ. олдин',
         text: 'Баҳор маҳалласида электр муаммолари ҳақида нима ахборот бор? Кўчанинг ярми қоронғи.',
-        tone: 'savol', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'e09', category: 'elektr', hokim_related: false,
         sender: 'Отабек Норов', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
         time: '18:50', timeRel: '53 дақ. олдин',
         text: 'Энди электр тикланди! Барча қўшниларга хабар бердик. Рахмат электр хизматига.',
-        tone: 'tashakkur', text_source: 'text'
+        text_source: 'text'
       },
 
       /* ── GAZ (Gas) ── */
@@ -1077,28 +1057,28 @@
         sender: 'Феруза Мусаева', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
         time: '10:20', timeRel: '8 соат 44 дақ. олдин',
         text: 'Газ қочяпти деган ҳид сезиляпти уйимизда. Қўшниларда ҳам шундай. Хавфли!',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'g02', category: 'gaz', hokim_related: true,
         sender: 'Дониёр Мирзаев', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
         time: '10:45', timeRel: '8 соат 19 дақ. олдин',
         text: 'Ҳоким жаноблари, Навбаҳорда газ чиқиши жиддий муаммо. Зудлик билан газ хизматини чорланг.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'g03', category: 'gaz', hokim_related: false,
         sender: 'Шаҳло Тоштемирова', mahalla: 'Гулшан маҳалласи', mahalla_id: 'gulshan',
         time: '13:30', timeRel: '5 соат 34 дақ. олдин',
         text: 'Газ плитам ёқмаяпти. Газ борми умуман? Бошқаларда ҳам шундайми?',
-        tone: 'savol', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'g04', category: 'gaz', hokim_related: false,
         sender: 'Рустам Алимов', mahalla: 'Олмазор маҳалласи', mahalla_id: 'olmazor',
         time: '15:00', timeRel: '4 соат 4 дақ. олдин',
         text: 'Газ таъминоти яхши, бизда ҳеч қандай муаммо йўқ. Миннатдорчилик билдирамиз.',
-        tone: 'tashakkur', text_source: 'text'
+        text_source: 'text'
       },
 
       /* ── CHIQINDI (Waste) ── */
@@ -1107,21 +1087,21 @@
         sender: 'Азиза Ниёзова', mahalla: 'Юлдуз маҳалласи', mahalla_id: 'yulduz',
         time: '08:00', timeRel: '11 соат 4 дақ. олдин',
         text: 'Чиқиндиларни 5 кундан бери олиб кетишмаяпти. Кўча ёқасида уйилиб қолди, ҳид чиқяпти.',
-        tone: 'shikoyat', text_source: 'text'
+        text_source: 'text'
       },
       {
         id: 'c02', category: 'chiqindi', hokim_related: false,
         sender: 'Бобур Йўлдошев', mahalla: 'Баҳор маҳалласи', mahalla_id: 'bahor',
         time: '11:00', timeRel: '8 соат 4 дақ. олдин',
         text: 'Чиқинди контейнерлари тўлиб кетган, ёнбошга ташланяпти. Санитария вазиятни текшириш керак.',
-        tone: 'shikoyat', text_source: 'caption'
+        text_source: 'caption'
       },
       {
         id: 'c03', category: 'chiqindi', hokim_related: false,
         sender: 'Моҳира Каримова', mahalla: 'Навбаҳор маҳалласи', mahalla_id: 'navbahor',
         time: '13:00', timeRel: '6 соат 4 дақ. олдин',
         text: 'Бугун чиқиндиларни вақтида олиб кетишди. Эълон қилган жадваллари ишлаяпти, яхши.',
-        tone: 'tashakkur', text_source: 'text'
+        text_source: 'text'
       },
     ];
 
@@ -1141,19 +1121,6 @@
       return CAT_COLORS[category] || CAT_COLORS.suv;
     }
 
-    /* ===================================================
-       TONE BADGE RENDERER
-       =================================================== */
-    function toneBadgeHTML(tone) {
-      const map = {
-        shikoyat: { cls: 'shikoyat', label: 'Шикоят' },
-        savol: { cls: 'savol', label: 'Савол' },
-        eylon: { cls: 'eylon', label: 'Эълон' },
-        tashakkur: { cls: 'tashakkur', label: 'Ташаккур' },
-      };
-      const t = map[tone] || map.eylon;
-      return `<span class="tone-badge tone-badge--${t.cls}">${t.label}</span>`;
-    }
 
     /* ===================================================
        SIGNAL CARD HTML (lane version — 3-line clamp)
@@ -1186,7 +1153,6 @@
         <div class="signal-card__mahalla">${signal.mahalla}</div>
         <div class="signal-card__text">${signal.text}</div>
         <div class="signal-card__footer">
-          ${toneBadgeHTML(signal.tone)}
           ${captionBadge}
           ${hokimStar}
         </div>
@@ -1219,7 +1185,6 @@
         <div class="drawer-signal-card__mahalla">${signal.mahalla}</div>
         <div class="drawer-signal-card__text">${signal.text}</div>
         <div class="drawer-signal-card__footer">
-          ${toneBadgeHTML(signal.tone)}
           ${captionBadge}
           ${hokimStar}
         </div>

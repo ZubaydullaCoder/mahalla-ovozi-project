@@ -14,7 +14,7 @@ The secondary emotional goal is **Confident Trust**. The hokim must believe the 
 |---|---|---|
 | First load / Login | Calm orientation | Clean, uncluttered dashboard; Today's signals default; no onboarding clutter |
 | Scanning lanes | Focused efficiency | High-density but visually organized cards; category-color accents guide the eye instantly |
-| Spotting a pattern (many complaints in one lane) | Alert awareness (not anxiety) | Count badge on lane header turns visually prominent; tone badges cluster visually |
+| Spotting a pattern (many complaints in one lane) | Alert awareness (not anxiety) | Count badge on lane header turns visually prominent; signal cluster in lane communicates volume |
 | Clicking a card / Opening drawer | Confident investigation | Smooth slide-in animation; breadcrumb grounds the user; context loads quickly |
 | Reading drawer context | Informed clarity | Clean typography; raw Uzbek text presented as-is; timestamps anchor evidence in reality |
 | Applying a filter (mahalla, time range) | Effortless control | Instant response (<300ms); no full-page reload; filter state persists visibly |

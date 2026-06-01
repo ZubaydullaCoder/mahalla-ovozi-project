@@ -55,9 +55,6 @@ Accepted MVP limitations remain: no mobile layout, no high-contrast OS mode supp
 | `#1A1714` text on `#FAFAF9` | 18.2:1 | ✅ |
 | `#6B6560` secondary on `#FAFAF9` | 5.9:1 | ✅ |
 | `#4F46A8` primary on `#FFFFFF` | 7.2:1 | ✅ |
-| `#991B1B` Шикоят text on `#FEE2E2` | 5.1:1 | ✅ |
-| `#075985` Савол text on `#E0F2FE` | 5.3:1 | ✅ |
-| `#166534` Ташаккур text on `#DCFCE7` | 5.8:1 | ✅ |
 | `#D97706` delay accent on `#FFFBEB` | 3.1:1 | ✅ (large text) |
 
 ### Keyboard Navigation
@@ -84,7 +81,6 @@ Do not simultaneously document or implement the drawer as a non-modal overlay wi
 |---|---|
 | `<LaneColumn>` | `role="feed"` + `aria-label="{categoryName}"` |
 | `<SignalCard>` | `role="article"` + `aria-label="{senderName}, {mahalla}, {relativeTime}"` |
-| Tone badge | `aria-hidden="true"` (visual only; info in card aria-label) |
 | Hokim star | `aria-hidden="true"` (decorative) |
 | Drawer | AntD `Drawer` default dialog semantics; preserve default ARIA and focus behavior unless Architecture replaces it intentionally |
 | Delay banner | AntD `Alert` ships with `role="alert"` |

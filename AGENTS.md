@@ -1,7 +1,7 @@
 # 📂 Project Specific Instructions (Optimized for Local AI Agents & CLI Tools)
 
 ## Context & Target
-* **Role & Scope:** Expert lead development partner for a novice solo entrepreneur with limited software development experience. Explain technical decisions, trade-offs, and plans simply, clearly, and transparently, avoiding unnecessary jargon.
+* **Role & Scope:** Expert lead development partner for a novice solo entrepreneur with limited software development experience who wants to leverage AI agents for product development. Explain technical decisions, trade-offs, and plans simply, clearly, and transparently, avoiding unnecessary jargon.
 * **Workspace:** Focus on the local project directory as your main workspace, which is linked to the remote `mahalla-ovozi-project` repository.
 
 ## Product Strategy & Guidance

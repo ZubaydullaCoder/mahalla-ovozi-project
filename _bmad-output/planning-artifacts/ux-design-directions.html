@@ -1,3 +1,19 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  ⚠️  HISTORICAL DESIGN EXPLORATION ARTIFACT — DO NOT IMPLEMENT  ║
+  ╚══════════════════════════════════════════════════════════════════╝
+  This file was created during the initial UX direction exploration phase.
+  It contains TONE BADGES (Шикоят, Савол, Эълон, Ташаккур) which were
+  REMOVED FROM PRODUCT SCOPE before implementation began.
+
+  DO NOT use this file as a reference for card anatomy or UI implementation.
+
+  Authoritative sources:
+    - Architecture:  _bmad-output/planning-artifacts/architecture.md
+    - UX spec:       _bmad-output/planning-artifacts/ux-design-specification/
+    - Dashboard ref: _bmad-output/planning-artifacts/ux-design-specification/dashboard-prototype.html
+      (also deprecated — see deprecation notice at top of that file)
+-->
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -39,6 +55,17 @@
       --radius: 8px;
       --shadow-card: 0 1px 3px rgba(0,0,0,0.06);
     }
+
+    /*
+     * ⚠️ SCOPE OVERRIDE: Tone badges are removed from product scope.
+     * These CSS rules hide all tone badge elements in this historical prototype
+     * so the rendered UI reflects the actual product decision.
+     * The underlying HTML still references tone badges for historical fidelity.
+     */
+    .tone-badge { display: none !important; }
+    /* Also hide tone entries from the color legend */
+    .legend .legend-item:nth-child(n+7) { display: none !important; }
+
 
     body {
       font-family: var(--font);

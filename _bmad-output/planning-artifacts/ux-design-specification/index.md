@@ -42,7 +42,6 @@
     - [Color System](./visual-design-foundation.md#color-system)
       - [Base Palette (AntD ConfigProvider tokens)](./visual-design-foundation.md#base-palette-antd-configprovider-tokens)
       - [Category Color Tokens (Left-border accents + count badge colors)](./visual-design-foundation.md#category-color-tokens-left-border-accents-count-badge-colors)
-      - [Tone Badge Colors (flat pill labels, muted fills)](./visual-design-foundation.md#tone-badge-colors-flat-pill-labels-muted-fills)
       - [Severity Ladder (Status indicators only)](./visual-design-foundation.md#severity-ladder-status-indicators-only)
     - [Typography System](./visual-design-foundation.md#typography-system)
       - [Type Scale](./visual-design-foundation.md#type-scale)

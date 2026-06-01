@@ -24,8 +24,6 @@
 
 - **The Chat Bubble Layout:** Designing lanes to look like actual Telegram chats with left/right bubble alternation. Dashboard cards must be uniform list elements for fast vertical scanning — not conversation threads.
 - **Aggregate Analytics Overload:** Replacing raw messages with heavy charts, aggregate percentages, or AI-summarized categories. The hokim needs raw, localized resident signals, not data abstractions that hide direct community evidence.
-- **Clickable-Looking Decorative Badges:** Tone badges (*Шикоят*, *Эълон*, etc.) styled with hover states, pointer cursors, or button-like borders. They are flat pill labels only — the visual contract must make their inert nature immediately clear.
-- **Interactive Tone Filtering via Badges:** Clicking tone badges is disabled for the MVP pilot to preserve fixed scope. Filtering is handled exclusively by the dedicated filter bar controls.
 - **Conversational Thread UI:** No reply chains, thread expansions, or direct messaging interfaces within the dashboard lanes — it is a passive monitoring tool, not a citizen communication channel.
 
 ## Design Inspiration Strategy

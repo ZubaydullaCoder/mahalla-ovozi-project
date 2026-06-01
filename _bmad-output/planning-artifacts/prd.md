@@ -95,7 +95,6 @@ AI accuracy targets are directional for the pilot — hard thresholds will be se
 - Signal/ignore classification is accurate enough that the hokim trusts the lanes (low false negatives on obvious civic signals)
 - Category assignment is mostly correct (water/electricity/gas/waste)
 - Hokim-related flag is useful as a cross-cutting filter
-- Tone labels are plausible enough to aid scanning
 
 If classification quality is insufficient, the pilot will extend prompt engineering, few-shot examples, and/or model selection before declaring go/no-go.
 
@@ -125,7 +124,7 @@ At the end of the pilot, evaluate success with lightweight human-in-the-loop rev
 
 ### MVP — Minimum Viable Product
 
-Exactly what is defined in `project-raw-idea.md` §6: one district, 3–5 mahalla groups, text/caption-only intake, AI signal filtering, five-lane dashboard, context drawer, filters (time/mahalla/search), tone badges, session-based auth, and operational health monitoring for operators.
+Exactly what is defined in `project-raw-idea.md` §6: one district, 3–5 mahalla groups, text/caption-only intake, AI signal filtering, five-lane dashboard, context drawer, filters (time/mahalla/search), session-based auth, and operational health monitoring for operators.
 
 For MVP intake, “text/caption-only” means Telegram `message.text` and textual `caption` content are in scope when Telegram provides them. Media binaries themselves — photos, videos, voice, stickers, polls, files, and similar non-text payloads — remain out of scope and are not stored or analyzed.
 
@@ -159,7 +158,7 @@ He didn't read a single raw group chat.
 
 Jamshid hears from a staff member that residents in Olmazor mahallasi are complaining about water. He wants to verify before acting. He opens the dashboard, selects Olmazor from the mahalla filter. The Water lane now shows only Olmazor signals. He sets a custom time range for the last 3 days. Four signals appear — two complaints, one question, one announcement. He clicks the announcement — it's from the mahalla rais about a scheduled water shutoff. The complaints are from before the announcement. The pattern makes sense. No urgent action needed.
 
-**Capabilities revealed:** mahalla filter scoping all lanes, time range filter (custom range up to 7 days), drawer context with tone badges, signal/announcement differentiation via tone, search as secondary fallback.
+**Capabilities revealed:** mahalla filter scoping all lanes, time range filter (custom range up to 7 days), context drawer, search as secondary fallback.
 
 ---
 
@@ -175,9 +174,9 @@ She never joins or reads the actual Telegram groups. She sees the filtered signa
 
 ### Journey 4: Operator — Bot Setup and Health Check (Admin/Operations)
 
-Rustam is the developer/operator who set up Mahalla Ovozi. Before the pilot launch, he adds the bot to each of the 3 selected mahalla Telegram groups, confirms the required Telegram group/bot setup in a real test group, and verifies the bot is receiving messages by checking the admin health endpoint. On day 3 of the pilot, the dashboard shows a "⚠️ Signals may be delayed" indicator. Rustam checks the health endpoint — the last batch ran 45 minutes ago. He inspects the logs, finds the AI provider returned a temporary error, and sees BullMQ has already retried successfully. The indicator clears on the next batch run. The hokim never saw a technical error.
+Rustam is the developer/operator who set up Mahalla Ovozi. Before the pilot launch, he adds the bot to each of the 3 selected mahalla Telegram groups, confirms the required Telegram group/bot setup in a real test group, and verifies the bot is receiving messages by checking the admin health endpoint. On day 3 of the pilot, the dashboard shows a "⚠️ Signals may be delayed" indicator. Rustam checks the health endpoint — the last batch ran 45 minutes ago. He inspects the logs, finds the AI provider returned a temporary error, and sees the `node-cron` scheduled batch retried successfully on the next run. The indicator clears on the next batch run. The hokim never saw a technical error.
 
-**Capabilities revealed:** admin health endpoint (last batch time, queue depth, errors), bot connectivity monitoring (my_chat_member events), "signals may be delayed" UI indicator for hokim (no raw errors shown), BullMQ retry handling, operator-only health view vs. hokim-facing dashboard.
+**Capabilities revealed:** admin health endpoint (last batch time, error count, pre-filter discard counts), bot connectivity monitoring (my_chat_member events), "signals may be delayed" UI indicator for hokim (no raw errors shown), AI retry handling in the batch processor, operator-only health view vs. hokim-facing dashboard.
 
 ---
 
@@ -192,7 +191,6 @@ Rustam is the developer/operator who set up Mahalla Ovozi. Before the pilot laun
 | Selected message highlighted in drawer | Journey 1 |
 | Mahalla filter (scopes all lanes) | Journey 2 |
 | Time range filter (presets: Today, 1h, 3h, 6h, custom up to 7 days) | Journey 2 |
-| Tone badges (Complaint / Announcement / Praise / Question) | Journey 2 |
 | Search filter (raw text, sender, mahalla) | Journey 3 |
 | Cross-mahalla signal view when filter = All | Journey 3 |
 | "Signals may be delayed" UI indicator (non-technical) | Journey 4 |
@@ -238,7 +236,7 @@ This client-owned policy stance does not reduce developer-owned security and dat
 | Webhook spoofed | Validate secret token header on every request |
 | Data loss on VPS failure | Daily `pg_dump` backups to external object storage; RTO <4h, RPO <24h |
 | Bot removed from group | `my_chat_member` event detection; expose operator-visible health alert state |
-| AI API downtime | BullMQ retry; show "Signals may be delayed" to hokim on next batch; expose technical details only in operator health/logs |
+| AI API downtime | Retry logic in batch processor (up to 3 attempts); show "Signals may be delayed" to hokim on next batch; expose technical details only in operator health/logs |
 | AI model/pricing assumptions stale | Revalidate current provider/model/pricing before implementation; keep model configurable |
 | Pre-filter false negatives | Use conservative centralized filters; validate thresholds with real mahalla data before hardening |
 
@@ -262,7 +260,7 @@ Mahalla Ovozi's frontend is a **single-page application (SPA)** — a React (or 
 
 ### Technical Architecture Considerations
 
-**Rendering:** Client-side SPA. No SSR required for MVP — all data fetched from the Fastify REST API after session authentication.
+**Rendering:** Client-side SPA. No SSR required for MVP — all data fetched from the Express REST API after session authentication.
 
 **State management:** Local component state + React Query (or SWR) for server-state caching. No global state manager needed at MVP scale.
 
@@ -289,7 +287,6 @@ Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG
 - Five lanes must scroll independently without layout interference
 - Virtualized lane rendering recommended if signal count per lane exceeds ~200 items (`react-window` or equivalent)
 - Context drawer is a right-side overlay, not a modal — main lane content remains visible behind it
-- Tone badges are visual-only labels; no interactive behavior required
 - Hokim-related flag rendered as a subtle indicator on signal items (e.g. small icon or badge)
 - The Hokim-related lane is a cross-cutting view. A signal with `hokim_related = true` can also appear in its service lane (Water, Electricity, Gas, or Waste), so intentional duplication between the Hokim-related lane and one service lane is allowed.
 
@@ -311,7 +308,7 @@ Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG
 
 - Five-lane dashboard (Hokim-related / Water / Electricity / Gas / Waste) with sticky lane headers and independent scroll
 - Default view: Today, All mahallas, newest-first
-- Signal item display: timestamp, sender reference, mahalla name, raw text snippet, tone badge, hokim-related indicator
+- Signal item display: timestamp, sender reference, mahalla name, raw text snippet, hokim-related indicator
 - Context drawer: same mahalla + same category + selected time range; clicked message auto-highlighted
 - Filters: time range (1h / 3h / 6h / Today / custom up to 7 days), mahalla, keyword search
 - Telegram bot: text and text-caption capture from monitored supergroups via webhook; media binaries are ignored for MVP
@@ -341,7 +338,7 @@ Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG
 - **FR1:** Authorized users can view civic signal messages organized into five category lanes (Hokim-related, Water, Electricity, Gas, Waste) on a single dashboard
 - **FR2:** Authorized users can scroll each lane independently without affecting other lanes
 - **FR3:** Authorized users can see a signal count per lane
-- **FR4:** Authorized users can see each signal item displaying: timestamp, sender reference, mahalla/group name, raw message snippet, tone badge, and hokim-related indicator
+- **FR4:** Authorized users can see each signal item displaying: timestamp, sender reference, mahalla/group name, raw message snippet, and hokim-related indicator
 - **FR5:** Authorized users can see the dashboard default to Today's signals across all mahallas, sorted newest-first
 - **FR6:** Authorized users can see a non-technical status indicator when signal data is delayed due to processing issues
 
@@ -372,13 +369,13 @@ Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG
 - **FR20:** The system processes captured messages in batches at a configurable interval (default: every 20 minutes)
 - **FR21:** The system applies a centralized conservative pre-filter before AI classification to remove structural noise such as bot-originated messages, unsupported non-text updates, empty text, pure emoji/reactions, and bot commands; exact thresholds must be validated with real mahalla data
 - **FR22:** The system classifies each remaining message as signal or ignore using AI
-- **FR23:** For signal messages, the system assigns: category (water/electricity/gas/waste), hokim-related flag, tone (complaint/announcement/praise/question), and optional short label
+- **FR23:** For signal messages, the system assigns: category (water/electricity/gas/waste), hokim-related flag, and optional short label
 - **FR24:** The system deletes raw captured messages after successful classification in the same batch run
 - **FR25:** The system retries failed AI classification batches automatically and surfaces a delay indicator to the dashboard
 
 ### Signal Storage
 
-- **FR26:** The system stores classified signal messages with: signal ID, Telegram IDs, district ID, mahalla ID, sender reference, sender display name snapshot, timestamp, raw text, text source (`message.text` or `caption`), category, hokim-related flag, tone, optional short label, and processing timestamps
+- **FR26:** The system stores classified signal messages with: signal ID, Telegram IDs, district ID, mahalla ID, sender reference, sender display name snapshot, timestamp, raw text, text source (`message.text` or `caption`), category, hokim-related flag, optional short label, and processing timestamps
 - **FR27:** The system retains signal messages for 90 days from capture date
 - **FR28:** The system does not store ignored messages after successful classification
 

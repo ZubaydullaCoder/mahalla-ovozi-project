@@ -10,7 +10,6 @@ Every element must communicate its interactivity through visual design alone —
 | Filter chip | `pointer` | Border → `colorPrimary` | `colorPrimary` outline 2px |
 | Mahalla `Select` | `pointer` | AntD default | AntD default |
 | Drawer close (✕) | `pointer` | Background → `colorBorder` | `colorPrimary` outline 2px |
-| Tone badge (*Шикоят*, etc.) | `default` | None | None |
 | Hokim star (★) | `default` | None | None |
 | Lane header | `default` | None | None |
 | Drawer backdrop | `default` | None | n/a |

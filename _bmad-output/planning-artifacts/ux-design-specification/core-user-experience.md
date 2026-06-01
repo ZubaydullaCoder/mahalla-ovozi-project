@@ -2,7 +2,7 @@
 
 ## Defining Experience
 The core loop of Mahalla Ovozi is a three-second scan followed by a single-click investigation:
-1. **Scan:** The governor glances at the five category lanes, assessing signal counts and tone patterns.
+1. **Scan:** The governor glances at the five category lanes, assessing signal counts and activity.
 2. **Select:** The governor clicks an active signal card in any lane.
 3. **Inspect:** The right-side context drawer opens instantly, presenting the localized evidence stream for that signal.
 
@@ -83,7 +83,7 @@ Filtering by mahalla, switching time range presets, and searching by keyword ope
 ## Critical Success Moments
 
 **The "60-Second Signal Scan" (Primary Success):**
-The governor opens the app whenever situational awareness is needed, spots a cluster of *Шикоят* (Complaint) tone badges in the *Электр* lane from Олмазор маҳалласи, clicks one card, and reads three corroborating citizen statements in the drawer — all within 60 seconds and without reading a single raw Telegram chat.
+The governor opens the app whenever situational awareness is needed, spots a cluster of signals in the *Электр* lane from Олмазор маҳалласи, clicks one card, and reads three corroborating citizen statements in the drawer — all within 60 seconds and without reading a single raw Telegram chat.
 
 **Delay Grace Mode (Make-or-Break Trust Moment):**
 When the AI classifier batch is running slow, the UI never shows an error modal or a blank dashboard. Instead, a non-intrusive amber status banner appears below the filter bar:
@@ -117,7 +117,7 @@ Each lane independently handles the absence of signals. When a lane has zero res
 ## Experience Principles
 
 **1. Glanceability Above All**
-Content is structured for rapid visual triage. Lane signal counts, category-color left-border accents, tone badges, and timestamp + sender lines must allow a busy user to assess district health in under 60 seconds.
+Content is structured for rapid visual triage. Lane signal counts, category-color left-border accents, and timestamp + sender lines must allow a busy user to assess district health in under 60 seconds.
 
 **2. Context Without Disruption**
 Detail inspection must never disorient the user. The drawer slides in as an overlay, keeping all five lanes visible and independently scrollable behind it.
@@ -131,6 +131,6 @@ Every element must communicate its interactivity clearly through visual design. 
 | Element Type | Cursor | Hover | Example |
 |---|---|---|---|
 | Interactive (filters, search, card, drawer close) | `pointer` | Visible active/lift state | Time range selector, signal card |
-| Decorative label (tone badge, hokim flag icon) | `default` | None | *Шикоят* pill, hokim indicator |
+| Decorative label (hokim flag icon) | `default` | None | ★ hokim indicator |
 
 ---

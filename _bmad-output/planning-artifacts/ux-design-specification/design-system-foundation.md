@@ -9,7 +9,7 @@ Ant Design v5 is chosen as the component foundation for Mahalla Ovozi. It provid
 ## Rationale for Selection
 
 - **Desktop-first component library:** AntD components are designed and optimized for dense data presentation on large monitors — aligning precisely with the 1920×1080 primary target.
-- **Covers all required MVP components out-of-the-box:** Drawer, Card, Tag (tone badges), Badge (lane signal counts), Skeleton, Alert (delay banner), Select, DatePicker, Input.Search — all with full TypeScript typings.
+- **Covers all required MVP components out-of-the-box:** Drawer, Card, Badge (lane signal counts), Skeleton, Alert (delay banner), Select, DatePicker, Input.Search — all with full TypeScript typings.
 - **Design token theming without external CSS conflicts:** AntD v5's ConfigProvider token system allows full palette, typography, and border-radius overrides at the theme root — no Tailwind, no class conflicts, no specificity battles.
 - **Uzbek Cyrillic rendering:** AntD is designed for multi-script environments (Chinese, Japanese, Korean) and renders Uzbek Cyrillic cleanly with any specified `fontFamily` token.
 - **Solo-developer efficiency:** A single engineer can build and ship the full MVP dashboard using standard AntD primitives, reserving custom CSS only for the five-lane grid layout and category-color left-border accents.
@@ -22,7 +22,7 @@ Ant Design v5 is chosen as the component foundation for Mahalla Ovozi. It provid
   2. `<SignalCard>` — the individual signal card with category-colored left-border accent (built on AntD `Card` with custom token overrides).
 - **Standard AntD components used as-is:**
   - `Drawer` → Context drawer overlay
-  - `Tag` → Tone badges (*Шикоят*, *Эълон*, etc.)
+  - `Tag` → Short label chip (e.g. `short_label` from AI output, if shown)
   - `Badge` → Lane signal count
   - `Skeleton` → Loading states (initial load + drawer swap shimmer)
   - `Alert` → Delay status banner (`type: "warning"`)
