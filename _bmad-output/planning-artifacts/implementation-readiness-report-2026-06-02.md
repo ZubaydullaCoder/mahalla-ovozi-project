@@ -1,19 +1,22 @@
 ---
 stepsCompleted: ['step-01-document-discovery', 'step-02-prd-analysis', 'step-03-epic-coverage-validation', 'step-04-ux-alignment']
+workflowStatus: 'superseded'
 assessedDocuments:
   prd: '_bmad-output/planning-artifacts/prd.md'
   architecture: '_bmad-output/planning-artifacts/architecture.md'
   architectureOps: '_bmad-output/planning-artifacts/architecture-ops-console.md'
   ux: '_bmad-output/planning-artifacts/ux-design-specification/'
-  epics: 'NOT FOUND'
+  epics: '_bmad-output/planning-artifacts/epics.md'
 ---
 
 # Implementation Readiness Assessment Report
 
+> **Superseded note (2026-06-03):** This report was produced before `epics.md` existed and is preserved for historical trace only. Current readiness should be assessed from `prd.md`, `architecture.md`, `architecture-ops-console.md`, `ux-design-specification/`, and `epics.md`.
+
 **Date:** 2026-06-02
 **Project:** mahalla-ovozi
 **Assessor:** BMad Implementation Readiness Check
-**Scope:** PRD ↔ Architecture ↔ UX Design consistency validation (Epics skipped — not yet created)
+**Scope:** Historical PRD ↔ Architecture ↔ UX Design consistency validation.
 
 ---
 
@@ -25,7 +28,7 @@ assessedDocuments:
 | Architecture | `architecture.md` | 55.8 KB, 1316 lines | ✅ Complete |
 | Architecture Ops | `architecture-ops-console.md` | 26.5 KB | ✅ Complete |
 | UX Specification | `ux-design-specification/` (14 files) | ~90 KB total | ✅ Complete |
-| Epics & Stories | — | — | ❌ NOT FOUND |
+| Epics & Stories | `epics.md` | 761 lines | ✅ Created after this report |
 
 ---
 
@@ -101,9 +104,9 @@ assessedDocuments:
 
 ## Epic Coverage Validation
 
-**Epics & Stories document: NOT FOUND.**
+**Epics & Stories document:** `_bmad-output/planning-artifacts/epics.md` now exists.
 
-FR traceability against Epics cannot be performed. However, the Architecture document (`architecture.md §14`) contains a built-in FR-to-Module mapping covering all 34 FRs. This partially substitutes until Epics are created.
+This section is historical because the original assessment was run before epics were generated. Use `epics.md` for current story sequencing and FR traceability.
 
 **Architecture FR-to-Module Coverage:**
 
@@ -118,7 +121,7 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 | FR29–32 (Auth & Access) | `auth/` | ✅ Mapped |
 | FR33–34 (Ops Health) | `health/`, `ops/`, `delay-banner.tsx` | ✅ Mapped |
 
-**⚠️ Epics required before Phase 4 can begin. See recommendations.**
+**Current status:** Epics are no longer the blocker identified by this historical report.
 
 ---
 
@@ -128,7 +131,6 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 | Topic | PRD | Architecture | Assessment |
 |---|---|---|---|
-| Tone field removal | Not in MVP scope | Explicitly removed from all layers (schema, API, UI, tests) | ✅ Perfect sync |
 | 20-min batch | FR20: configurable interval, default 20 min | `node-cron '*/20 * * * *'`, configurable | ✅ Aligned |
 | Filtering modes | FR21a: ai_full, keyword_gate, shadow_compare | Env var `FILTER_MODE`, mode routing in `pipeline.ts` | ✅ Aligned |
 | Keyword registry | FR21b: manual, centralized, Ops Console only | PostgreSQL `keywords` table, Ops CRUD routes, AI never generates | ✅ Aligned |
@@ -156,7 +158,7 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 |---|---|---|---|
 | Five lanes | FR1: Hokim, Water, Electricity, Gas, Waste | Five-lane layout with Uzbek Cyrillic names | ✅ Aligned |
 | Default view | FR5: Today, All, newest-first | Documented as first critical success moment | ✅ Aligned |
-| Signal card anatomy | FR4: timestamp, sender, mahalla, raw text, hokim indicator | `<SignalCard>` spec: exact same fields; no tone badge | ✅ Aligned |
+| Signal card anatomy | FR4: timestamp, sender, mahalla, raw text, hokim indicator | `<SignalCard>` spec: exact same fields | ✅ Aligned |
 | Context drawer | FR7-10 | Drawer spec: category + mahalla + time range; highlighted anchor | ✅ Aligned |
 | Filter bar | FR11-13 | Filter bar components: time-range-chips, mahalla-select, keyword-search | ✅ Aligned |
 | Hokim duplication | PRD §Implementation Considerations | `<LaneGrid>` duplication rule explicitly documented | ✅ Aligned |
@@ -176,7 +178,7 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 | Topic | UX Spec | Architecture | Assessment |
 |---|---|---|---|
-| AntD version | UX component-strategy.md header: "AntD v5" in table title | Architecture: "Ant Design v6.x with ConfigProvider tokens" | ⚠️ VERSION MISMATCH (see Issues) |
+| AntD version | UX component strategy specifies AntD v6 | Architecture: "Ant Design v6.x with ConfigProvider tokens" | ✅ Aligned |
 | ConfigProvider theming | Custom tokens via ConfigProvider | `mahallaTheme` in `theme.ts`, `ConfigProvider` at app root | ✅ Aligned |
 | TanStack Query | Not specified in UX | Architecture: @tanstack/react-query v5 | ✅ (UX doesn't contradict) |
 | Virtual scroll | `@tanstack/react-virtual` | `@tanstack/react-virtual` | ✅ Aligned |
@@ -192,19 +194,9 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 ## 🔴 ISSUES FOUND — Action Required
 
-### Issue 1 (MEDIUM): AntD Version Inconsistency in UX Component Strategy
+### Issue 1 (RESOLVED): AntD Version Label
 
-**Location:** `ux-design-specification/component-strategy.md` — table header reads **"AntD v5 — Used As-Is"**
-
-**Conflict:**
-- Architecture clearly specifies: `antd v6.x with ConfigProvider tokens`
-- UX component-strategy.md table column header says `AntD v5`
-
-**Impact:** This is a copy-paste error from the UX doc generation. The actual component list and usage described are consistent with v6.x patterns (ConfigProvider tokens, useToken()). The **behavior/components spec is correct** — only the version label in the table header is wrong.
-
-**Risk:** LOW for implementation (developer will follow Architecture's v6.x spec), but creates confusion.
-
-**Recommendation:** Fix the table header in `component-strategy.md` to read "AntD v6 — Used As-Is".
+**Current status:** UX and Architecture now consistently specify AntD v6.
 
 ---
 
@@ -224,19 +216,9 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 ---
 
-### Issue 3 (LOW): Time Range Preset Naming Discrepancy
+### Issue 3 (RESOLVED): Time Range Preset Naming
 
-**Location:** PRD vs. Architecture Initial Fetch Scope
-
-**Conflict:**
-- PRD FR11: presets are `Last 1h, 3h, 6h, Today` + custom up to 7 days
-- Architecture §9 "Initial Fetch Scope": names presets as `1 соат`, `3 соат`, `6 соат`, `Бугун`, `Кеча`, `7 кун` — adds **`Кеча` (Yesterday)** which is NOT listed in PRD FR11
-
-**Impact:** Architecture adds a `Кеча` (Yesterday) preset not defined in the PRD. This is a scope addition to the filter bar.
-
-**Risk:** LOW-MEDIUM — Yesterday is a natural and useful preset. But it triggers a new API call with skeleton (as documented in Architecture §9), which is behavioral scope not in PRD.
-
-**Recommendation:** Either (a) add `Кеча` to PRD FR11 as an explicit preset, or (b) confirm with owner that `Кеча` is an Architecture-approved enhancement. Given the pilot context, keeping it is reasonable — just needs explicit acknowledgment.
+**Current status:** PRD FR11 now includes Yesterday, matching Architecture, UX, and Epics.
 
 ---
 
@@ -270,19 +252,9 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 ---
 
-### Issue 6 (CRITICAL): No Epics & Stories Document
+### Issue 6 (RESOLVED): Epics & Stories Document
 
-**Finding:** No epics or stories files found anywhere in `_bmad-output/`.
-
-**Impact:** Without Epics & Stories:
-- No implementation sequencing plan
-- No sprint planning possible
-- No story-level AC (Acceptance Criteria) for developer handoff
-- Phase 4 (implementation) cannot begin in a structured way
-
-**Risk:** HIGH — this is the primary blocking gap before implementation starts.
-
-**Recommendation:** Run `bmad-create-epics-and-stories` [CE] immediately. Input: `prd.md` + `architecture.md` + `architecture-ops-console.md`.
+**Current status:** `epics.md` has been created and should be used for implementation sequencing.
 
 ---
 
@@ -292,21 +264,21 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 | Check | Result |
 |---|---|
-| PRD completeness | ✅ 35 FRs + 15 NFRs, well-defined, scope-disciplined |
-| Architecture covers all PRD FRs | ✅ All 34 (35 incl. sub-FRs) have module mapping |
-| Architecture covers all PRD NFRs | ✅ All 15 NFRs addressed (some Phase 2 deferred) |
+| PRD completeness | ✅ 35 FRs + 16 NFRs after NFR16 accessibility update |
+| Architecture covers all PRD FRs | ✅ All 35 have module mapping |
+| Architecture covers all PRD NFRs | ✅ All 16 NFRs addressed (some Phase 2 deferred) |
 | UX aligned with PRD journeys | ✅ All 4 journeys supported; components match FRs |
-| UX aligned with Architecture stack | ✅ Aligned (except AntD version label — cosmetic) |
+| UX aligned with Architecture stack | ✅ Aligned after AntD v6 label cleanup |
 | Critical conflicts | ✅ NONE |
-| Epics & Stories | ❌ NOT CREATED — blocking for Phase 4 |
+| Epics & Stories | ✅ CREATED — use `epics.md` for story sequencing |
 
 ### Issues by Severity
 
 | # | Severity | Issue | Action |
 |---|---|---|---|
-| 6 | 🔴 CRITICAL | No Epics & Stories | Create immediately with [CE] |
-| 1 | 🟡 MEDIUM | AntD "v5" label in UX component-strategy.md (should be v6) | Fix label in doc |
-| 3 | 🟡 MEDIUM | `Кеча` preset in Architecture not in PRD FR11 | Acknowledge or add to PRD |
+| 6 | ✅ RESOLVED | Epics & Stories created | Use `epics.md` |
+| 1 | ✅ RESOLVED | AntD v6 labels aligned | No action |
+| 3 | ✅ RESOLVED | `Кеча`/Yesterday aligned into PRD FR11 | No action |
 | 5 | 🟡 MEDIUM | PRD min display (1366×768) vs UX/Arch hard block at <1024px | Clarify minimum; UX spec is fine |
 | 2 | 🟢 LOW | Virtualization threshold: PRD says ~200, UX/Arch says 50 | Use 50 (Architecture wins) |
 | 4 | 🟢 LOW | Login rate limiting not in PRD | No action needed |
@@ -315,7 +287,5 @@ FR traceability against Epics cannot be performed. However, the Architecture doc
 
 ## Recommended Next Steps
 
-1. **[CE] Create Epics & Stories** — This is the only critical blocker. All 3 spec documents (PRD, Architecture, UX) are solid enough to drive epics creation now.
-2. **[Optional] Fix AntD version label** in `component-strategy.md` (2-minute fix).
-3. **[Optional] Align `Кеча` preset** — confirm with Zubaydulla whether Yesterday preset stays; if yes, add FR11a or update FR11 in PRD.
-4. **[SP] Sprint Planning** — After Epics & Stories are created and validated.
+1. Use `epics.md` as the implementation sequencing source.
+2. Run sprint planning when ready to begin story execution.

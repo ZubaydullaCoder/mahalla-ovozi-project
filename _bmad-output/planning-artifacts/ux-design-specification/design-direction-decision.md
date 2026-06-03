@@ -2,9 +2,7 @@
 
 ## Design Directions Explored
 
-Three interactive design directions were generated and evaluated in [`ux-design-directions.html`](../ux-design-directions.html).
-
-`ux-design-directions.html` is a static reference prototype only. It is not an implementation source of truth. The chosen source of truth for implementation and Architecture handoff is this sharded UX specification directory.
+Three interactive design directions were generated and evaluated during UX design. The source of truth for implementation and Architecture handoff is this sharded UX specification directory.
 
 | Direction | Density | Filter Bar | Lane Headers | Card Border |
 |---|---|---|---|---|

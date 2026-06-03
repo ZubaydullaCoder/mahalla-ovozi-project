@@ -57,11 +57,6 @@ and the Hokim-related lane.
 
 ## Explicitly Removed From MVP
 
-- Tone classification
-- Tone database field
-- Tone API field
-- Tone badge UI
-- Tone filtering
 - Redis/BullMQ queue infrastructure in Phase 1
 - Fastify backend in Phase 1
 - Drizzle ORM in Phase 1

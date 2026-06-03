@@ -63,7 +63,7 @@
     - [Journey Patterns](./user-journey-flows.md#journey-patterns)
     - [Flow Optimization Principles](./user-journey-flows.md#flow-optimization-principles)
   - [Component Strategy](./component-strategy.md)
-    - [Design System Components (AntD v5 — Used As-Is)](./component-strategy.md#design-system-components-antd-v5-used-as-is)
+    - [Design System Components (AntD v6 — Used As-Is)](./component-strategy.md#design-system-components-antd-v6-used-as-is)
     - [Custom Components](./component-strategy.md#custom-components)
       - [](./component-strategy.md#)
       - [](./component-strategy.md#)

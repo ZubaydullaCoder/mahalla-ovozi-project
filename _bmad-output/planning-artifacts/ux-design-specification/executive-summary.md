@@ -15,7 +15,7 @@ Mahalla Ovozi (Voice of the Mahalla) is a private GovTech situational awareness 
 *   **System Status Transparency:** Representing empty states (no reports) and pipeline delays (e.g., "Signals may be delayed" when AI batches lag) in a clear, non-technical manner.
 *   **Localization Consistency:** Enforcing clean Uzbek Cyrillic terminology for all primary lanes.
     *   *Lanes:* *Ҳокимга тегишли* (Hokim-related), *Сув* (Water), *Електр* (Electricity), *Газ* (Gas), *Чиқинди* (Waste).
-    *   Tone classification and tone labels are **removed from MVP scope entirely** — see `prd.md` for rationale.
+    *   All dashboard copy remains centralized and testable to prevent Latin Uzbek slip-throughs.
 
 ## Design Opportunities
 *   **Contextual Evidence Mapping:** Providing instant neighborhood context through a right-side drawer that loads related signals (same mahalla + same category + time window) automatically when a card is selected. Clicking a different card instantly refreshes the drawer.

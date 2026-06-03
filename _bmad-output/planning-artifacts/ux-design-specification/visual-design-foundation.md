@@ -23,7 +23,7 @@ The palette is built around the "Calm Authority" emotional goal: restrained, pro
 
 ### Category Color Tokens (Left-border accents + count badge colors)
 
-Deliberately muted mid-tones that read clearly against the `#FAFAF9` container without triggering alarm responses.
+Deliberately muted category colors that read clearly against the `#FAFAF9` container without triggering alarm responses.
 
 | Category | Token | Hex | Character |
 |---|---|---|---|

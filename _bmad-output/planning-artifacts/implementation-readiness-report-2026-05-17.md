@@ -24,7 +24,6 @@ Current authoritative planning sources:
 Current status as of 2026-06-01:
 
 - PRD updated for current MVP scope.
-- Tone classification and tone UI are removed from MVP scope.
 - Phase 1 stack is Express v4, Prisma v7, PostgreSQL, grammY, Zod v4, AntD v6, React 18, and `node-cron`.
 - Historical UX HTML explorations are marked as non-authoritative.
 - `.agents/skills` is the active project skill directory.

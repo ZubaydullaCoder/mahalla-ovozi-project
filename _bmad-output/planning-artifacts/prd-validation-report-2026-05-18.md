@@ -12,7 +12,7 @@ This file is retained only as a historical marker.
 
 The original 2026-05-18 PRD validation report was generated before the current Phase 1
 architecture hardening and MVP scope cleanup. It referenced earlier assumptions that are no
-longer authoritative, including tone badges and pre-architecture stack choices.
+longer authoritative, including pre-architecture stack choices.
 
 Current authoritative planning sources:
 
@@ -24,7 +24,6 @@ Current authoritative planning sources:
 Current status as of 2026-06-01:
 
 - PRD updated for the current MVP scope.
-- Tone classification and tone UI are removed from MVP scope.
 - Phase 1 architecture selects Express v4, Prisma v7, PostgreSQL, grammY, Zod v4, AntD v6, React 18, and `node-cron`.
 - Historical UX HTML explorations are marked as non-authoritative.
 

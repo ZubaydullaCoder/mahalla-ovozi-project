@@ -1,13 +1,13 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6]
-inputDocuments: ['project-raw-idea.md']
+inputDocuments: ['docs/archive/project-raw-idea.md']
 workflowType: 'research'
 lastStep: 1
 research_type: 'technical'
 research_topic: 'Telegram Bot API + AI Message Classification Pipeline for Mahalla Ovozi'
 research_goals: |
   1. Validate what Telegram Bot API actually allows for group message access (permissions, rate limits, supergroup constraints)
-  2. Determine the best AI model/approach for Uzbek-language civic signal classification (signal vs. noise, category, tone) — cost, latency, accuracy tradeoff
+  2. Determine the best AI model/approach for Uzbek-language civic signal classification (signal vs. noise, category) — cost, latency, accuracy tradeoff
   3. Understand feasible architecture patterns for a 20-min batch processing pipeline
   4. Identify any hard constraints that would change the MVP scope
 user_name: 'Zubaydulla'
@@ -35,10 +35,10 @@ source_verification: partial-revalidation-required
 > - `_bmad-output/planning-artifacts/architecture.md`
 > - `_bmad-output/planning-artifacts/architecture-ops-console.md`
 > - `_bmad-output/planning-artifacts/prd.md`
-> - `stakeholder-decisions-log.md`
+> - `docs/stakeholder-decisions-log.md`
 >
-> Do not implement old references to tone classification, Fastify, Redis/BullMQ, separate workers, or stale `@google/genai` syntax from this file.
-> Current Phase 1 uses Express v4, Prisma, PostgreSQL, `node-cron`, no Redis/BullMQ, no tone field, and Gemini structured output via `responseJsonSchema`.
+> Do not implement old references to Fastify, Redis/BullMQ, separate workers, or stale `@google/genai` syntax from this file.
+> Current Phase 1 uses Express v4, Prisma, PostgreSQL, `node-cron`, no Redis/BullMQ, and Gemini structured output via `responseJsonSchema`.
 
 ## 2026-05-17 Validation Patch — Important Correction
 
@@ -183,7 +183,7 @@ Before go-live, create a small labeled evaluation set from real or realistic mah
 Recommended minimum:
 
 1. 100–200 mixed-language messages.
-2. Human labels for `decision`, `category`, `hokim_related`, and `tone`.
+2. Human labels for `decision`, `category`, and `hokim_related`.
 3. Include short civic messages such as `gaz?`, `suv?`, `tok?`, `свет?`.
 4. Include noisy group chatter, congratulations, bot spam, links, announcements, forwarded text, and complaints.
 5. Measure at least signal recall and false positive rate.
@@ -206,7 +206,7 @@ Real mahalla groups may include:
 - Administrative announcements.
 - Forwarded messages.
 
-**Prompt guidance:** include few-shot examples across scripts and tones. Do not use transliteration preprocessing unless real tests prove it helps.
+**Prompt guidance:** include few-shot examples across scripts. Do not use transliteration preprocessing unless real tests prove it helps.
 
 ---
 
@@ -343,7 +343,6 @@ Required logical fields:
   decision: 'signal' | 'ignore';
   category: 'water' | 'electricity' | 'gas' | 'waste' | null;
   hokim_related: boolean;
-  tone: 'complaint' | 'announcement' | 'praise' | 'question' | null;
   short_label?: string | null;
 }
 ```
@@ -414,7 +413,6 @@ signal_messages (
   raw_text,
   category ENUM('water','electricity','gas','waste'),
   hokim_related BOOLEAN,
-  tone ENUM('complaint','announcement','praise','question'),
   short_label VARCHAR(50),
   message_timestamp,
   captured_at,

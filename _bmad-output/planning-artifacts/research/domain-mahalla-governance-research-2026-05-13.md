@@ -1,6 +1,6 @@
 ---
 stepsCompleted: [1]
-inputDocuments: ['project-raw-idea.md', 'technical-telegram-ai-pipeline-research-2026-05-13.md']
+inputDocuments: ['docs/archive/project-raw-idea.md', '_bmad-output/planning-artifacts/research/technical-telegram-ai-pipeline-research-2026-05-13.md']
 workflowType: 'research'
 lastStep: 1
 research_type: 'domain'
@@ -28,9 +28,7 @@ source_verification: true
 
 > [!CAUTION]
 > **Historical domain research, not current product scope.**
-> This file may mention tone visibility or complaint tone as part of earlier domain framing.
-> Current MVP scope removes tone classification entirely. Use `prd.md`, `architecture.md`,
-> and `stakeholder-decisions-log.md` for product and implementation decisions.
+> Use `prd.md`, `architecture.md`, and `docs/stakeholder-decisions-log.md` for product and implementation decisions.
 
 ## Research Overview
 
@@ -202,7 +200,6 @@ Problem resolution
 2. **Filtering loss:** Mahalla chairs don't escalate everything; some complaints die locally
 3. **No aggregation:** Five separate mahallas may each have a water problem — hokim has no cross-mahalla view
 4. **Reactive, not proactive:** Hokim learns about problems after they become crises, not when they first emerge
-5. **No tone visibility:** Hokim can't distinguish "first complaint" from "residents are outraged" — all signals look the same through formal channels
 
 ### How Mahalla Ovozi Changes the Workflow
 
@@ -219,7 +216,7 @@ Morning briefing (8:00–9:00)  ← CHANGED
 Proactive action
   Hokim has context before residents escalate formally
   Can address issues before they appear in official complaint channels
-  Outrage signals (tone: complaint) get prioritized over routine announcements
+  High-volume repeated resident reports get prioritized over routine announcements
 
 Weekly reporting  ← ENRICHED
   Dashboard provides data-backed summary of civic activity by category
@@ -245,7 +242,6 @@ Weekly reporting  ← ENRICHED
 | Gaz | Gas | Category |
 | Elektr / Yorug'lik | Electricity / Light | Category (residents say "yorug'lik yo'q" = "no light") |
 | Atrof-muhit / Chiqindi | Environment / Waste | Category |
-| Shikoyat | Complaint | Key tone in classification |
 | Muammo | Problem | Common civic signal word |
 | Qabulxona | Reception office | Where citizens formally submit appeals |
 | Temir Daftar | Iron Notebook | Registry of vulnerable families tracked by mahalla |

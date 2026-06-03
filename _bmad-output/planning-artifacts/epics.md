@@ -30,7 +30,7 @@ This document provides the complete epic and story breakdown for mahalla-ovozi, 
 FR1: Authorized users can view civic signal messages organized into five category lanes (Hokim-related, Water, Electricity, Gas, Waste) on a single dashboard.
 FR2: Authorized users can scroll each lane independently without affecting other lanes.
 FR3: Authorized users can see a signal count per lane.
-FR4: Authorized users can see each signal item displaying: timestamp, sender reference, mahalla/group name, raw message snippet, and hokim-related indicator. (No tone badge.)
+FR4: Authorized users can see each signal item displaying: timestamp, sender reference, mahalla/group name, raw message snippet, and hokim-related indicator.
 FR5: Authorized users can see the dashboard default to Today's signals across all mahallas, sorted newest-first.
 FR6: Authorized users can see a non-technical status indicator when signal data is delayed due to processing issues.
 FR6a: Authorized users can open a stored signal's original Telegram message link when Telegram permits access.
@@ -52,7 +52,7 @@ FR21: The system applies a centralized conservative pre-filter (F1: bot sender, 
 FR21a: The system supports developer/operator-only filtering modes: ai_full, keyword_gate, and shadow_compare. Active mode is not visible in hokim/staff dashboard.
 FR21b: The system stores manually managed keyword phrases in one centralized Ops Console database registry. AI does not auto-generate or modify keywords.
 FR22: The system classifies eligible messages as signal or ignore using AI, with mode-aware routing (ai_full / keyword_gate / shadow_compare).
-FR23: For signal messages, the system assigns: category (water/electricity/gas/waste), hokim_related flag, and optional short label. (No tone field.)
+FR23: For signal messages, the system assigns: category (water/electricity/gas/waste), hokim_related flag, and optional short label.
 FR24: The system deletes raw captured messages after successful classification in the same batch run.
 FR25: The system retries failed AI classification batches automatically (up to 3 attempts) and surfaces a delay indicator to the dashboard.
 FR26: The system stores classified signal messages with all required fields: signal ID, Telegram IDs, district ID, mahalla ID, sender reference, sender display name snapshot, timestamp, raw text, text_source, category, hokim_related flag, optional short label, processing timestamps.
@@ -97,7 +97,7 @@ NFR16: The dashboard UI meets WCAG 2.1 Level AA compliance for contrast ratios, 
 From Architecture — technical decisions that directly affect story scope and implementation:
 
 - **AR1 — Workspace scaffold:** npm workspaces monorepo with `apps/server` (Express + TypeScript) and `apps/web` (React + Vite + TypeScript). Root `tsconfig.json` strict mode. All packages must be pinned to documented versions.
-- **AR2 — Database schema:** Prisma v7.8.0 with PostgreSQL. Six models: District, Mahalla, User, RawMessage, SignalMessage, Keyword, BatchHealth, PipelineEvent. All timestamps UTC. BigInt for Telegram chat IDs. No tone field anywhere.
+- **AR2 — Database schema:** Prisma v7.8.0 with PostgreSQL. Eight models: District, Mahalla, User, RawMessage, SignalMessage, Keyword, BatchHealth, PipelineEvent. All timestamps UTC. BigInt for Telegram chat IDs.
 - **AR3 — Prisma 7 runtime pattern:** `prisma.config.ts` for CLI; `@prisma/adapter-pg` for runtime. `connect-pg-simple` for session store (separate pg.Pool — not Prisma client).
 - **AR4 — Three-outcome discard model:** Stage 1 = structural pre-filter discard (at webhook, not written to raw_messages); Stage 2 = keyword-gate skip (at webhook, keyword_gate mode only); Stage 3 = AI-classified-as-ignore (at batch time, deleted after classification). Must not conflate these three.
 - **AR5 — Idempotency rules:** Batch: `$transaction([signalCreate, rawDelete])` per message. Intake: `upsert` with empty update on `telegram_update_id` unique constraint. Simulated messages use negative update IDs.
@@ -123,7 +123,7 @@ From Architecture — technical decisions that directly affect story scope and i
 
 UX-DR1: Implement AntD v6 ConfigProvider theme with `mahallaTheme` token overrides in `theme.ts`. All category color tokens (hokimRelated #7C2D56, water #1D6FA4, electricity #B45309, gas #1A7060, waste #5C6B2E) defined in ConfigProvider. No ad-hoc color literals in components.
 UX-DR2: Implement `<LaneGrid>` custom component: flex-row layout, 100vw, calc(100vh - 56px) height, overflow hidden. Five `<LaneColumn>` children with flex:1, min-width 200px (220px at ≥1440px), overflow-y auto, virtualized scroll via `@tanstack/react-virtual` (threshold: >50 cards per lane).
-UX-DR3: Implement `<SignalCard>` pure presentational component: 4px category-color left border, card meta row (sender 13px/600 + timestamp 11px/400 right-aligned), mahalla label 12px/400, raw text 3-line clamp 13px/400, footer with CaptionBadge (📷 if text_source='caption') and HokimStar (★ if hokim_related=true). No tone badge.
+UX-DR3: Implement `<SignalCard>` pure presentational component: 4px category-color left border, card meta row (sender 13px/600 + timestamp 11px/400 right-aligned), mahalla label 12px/400, raw text 3-line clamp 13px/400, footer with CaptionBadge (📷 if text_source='caption') and HokimStar (★ if hokim_related=true).
 UX-DR4: Implement hokim-related lane duplication logic in `<DashboardPage>`: signal with hokim_related=true appears in BOTH hokim lane AND its service category lane. Same Signal object referenced in both lanes (not copied). Count badge increments in both lanes.
 UX-DR5: Implement `<SignalCard>` color rule: categoryColor prop is ALWAYS the signal's original service category color, even when rendered inside the Hokim lane. Drawer context rule: clicking a Hokim-lane card opens a drawer filtered by the signal's original service category + mahalla + time range (NOT hokim_related=true filter).
 UX-DR6: Implement `<FilterBar>` sticky header (56px, position sticky top:0): time-range-chips (1 соат / 3 соат / 6 соат / Бугун / Кеча / 7 кун), mahalla-select (AntD Select, default: Барча маҳаллалар), keyword-search (AntD Input.Search, placeholder: Қидириш...). All labels in Uzbek Cyrillic.
@@ -171,7 +171,7 @@ FR21: Epic 1 — Centralized conservative structural pre-filter (F1/F2/F3)
 FR21a: Epic 1 (logic) + Epic 6 (Ops UI display) — Developer/operator filtering modes
 FR21b: Epic 1 (DB + matcher) + Epic 6 (Ops Console CRUD) — Manual keyword registry
 FR22: Epic 1 — AI classification: signal vs. ignore, mode-aware routing
-FR23: Epic 1 — Signal metadata: category, hokim_related, short_label (no tone)
+FR23: Epic 1 — Signal metadata: category, hokim_related, short_label
 FR24: Epic 1 — Raw messages deleted after successful classification
 FR25: Epic 1 — Batch retry (3 attempts) + delay indicator surfaced to dashboard
 FR26: Epic 1 — Signal stored with full field set
@@ -238,7 +238,7 @@ So that the development environment is ready and all database models exist as th
 
 **Given** a fresh project directory with Node.js and PostgreSQL available
 **When** the developer runs `npm install` and `npm run db:migrate`
-**Then** the npm workspaces monorepo is initialized (`apps/server`, `apps/web`), root `tsconfig.json` is in strict mode, and all Prisma models (District, Mahalla, User, RawMessage, SignalMessage, Keyword, BatchHealth, PipelineEvent) exist in the database with correct field types — BigInt for Telegram chat IDs, no tone fields anywhere
+**Then** the npm workspaces monorepo is initialized (`apps/server`, `apps/web`), root `tsconfig.json` is in strict mode, and all Prisma models (District, Mahalla, User, RawMessage, SignalMessage, Keyword, BatchHealth, PipelineEvent) exist in the database with correct field types — including BigInt for Telegram chat IDs
 **And** `.env.example` documents all required environment variables: DATABASE_URL, BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, AI_API_KEY, AI_MODEL, FILTER_MODE, OPS_ENABLED, OPS_SECRET, SESSION_SECRET, PORT
 **And** `prisma.config.ts` is present at project root using `defineConfig` with datasource URL; `apps/server/src/shared/db.ts` uses `PrismaPg` adapter for runtime connection
 **And** `check-uz-strings.ts` Vitest test file exists in `scripts/` and passes (empty `strings.ts` is acceptable at this stage)
@@ -313,7 +313,7 @@ So that civic signals are stored in `signal_messages` and the core pipeline outp
 
 **Given** `raw_messages` contains pending messages and `AI_API_KEY` and `AI_MODEL` env vars are set
 **When** the `node-cron` scheduler fires every 20 minutes (`*/20 * * * *`) or `runClassifyBatchWithLock` is called
-**Then** the batch fetches all pending raw messages for the district, calls `@google/genai` with `responseMimeType: 'application/json'` and `responseJsonSchema` (from `zod-to-json-schema`), and for each message classified as `signal`: writes to `signal_messages` (category, hokim_related, short_label — no tone) AND deletes from `raw_messages` in a single `$transaction`
+**Then** the batch fetches all pending raw messages for the district, calls `@google/genai` with `responseMimeType: 'application/json'` and `responseJsonSchema` (from `zod-to-json-schema`), and for each message classified as `signal`: writes to `signal_messages` (category, hokim_related, short_label) AND deletes from `raw_messages` in a single `$transaction`
 **And** messages classified as `ignore` are deleted from `raw_messages` only (no signal written)
 **And** if the AI response fails Zod discriminated-union schema validation, the message retries up to 3 times with exponential backoff; after 3 failures the batch is marked failed and the message stays in `raw_messages` for the next batch run
 **And** `batch_health` row is written at batch completion with: status, started_at, completed_at, messages_fetched, signals_written, ignored_count, pre_filter_discards, filter_mode, and all keyword comparison metric fields
@@ -475,7 +475,7 @@ So that I can scan district civic activity at a glance within 60 seconds.
 **When** the page loads
 **Then** `DashboardPage` fetches signals via TanStack Query (`GET /api/signals`), shows AntD Skeleton (3 rows per column) in all 5 lanes during fetch, then renders `LaneGrid` with 5 `LaneColumn` components (Ҳокимга тегишли, Сув, Электр, Газ, Чиқинди)
 **And** each lane has a sticky header with the Uzbek Cyrillic category name and a count badge showing the number of cards in that lane
-**And** each `SignalCard` displays: sender name (13px/600, fallback chain: Display Name → @username → Резидент, truncate >30 chars with AntD Tooltip), mahalla label (12px/400, colorTextSecondary), timestamp (relative "10 дақ. олдин" for ≤24h; absolute "HH:MM" for >24h), raw text snippet (3-line clamp, 13px/400, 1.5 line-height), 4px category-color left border, CaptionBadge (📷, aria-label="Расм тавсифи") if `text_source='caption'`, HokimStar (★, `aria-hidden="true"`) if `hokim_related=true`; no tone badge anywhere
+**And** each `SignalCard` displays: sender name (13px/600, fallback chain: Display Name → @username → Резидент, truncate >30 chars with AntD Tooltip), mahalla label (12px/400, colorTextSecondary), timestamp (relative "10 дақ. олдин" for ≤24h; absolute "HH:MM" for >24h), raw text snippet (3-line clamp, 13px/400, 1.5 line-height), 4px category-color left border, CaptionBadge (📷, aria-label="Расм тавсифи") if `text_source='caption'`, and HokimStar (★, `aria-hidden="true"`) if `hokim_related=true`
 **And** signals with `hokim_related=true` appear in BOTH the Ҳокимга тегишли lane AND their service category lane (same Signal object reference, not a copy); count badge increments in both lanes
 **And** `categoryColor` on every `SignalCard` is ALWAYS the signal's original service category color — including when rendered inside the Hokim lane
 **And** each `LaneColumn` has `role="feed"` and `aria-label` equal to the Uzbek Cyrillic category name; each `SignalCard` has `role="article"` and `tabIndex={0}`

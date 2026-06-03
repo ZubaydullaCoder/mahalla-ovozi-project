@@ -11,26 +11,19 @@
 
 ### Requirements Overview
 
-**Functional Requirements (34 total, tone fields removed):**
+**Functional Requirements (35 total, including FR6a, FR21a, and FR21b):**
 
 Seven groups: Signal Display (FR1–6), Context Drawer (FR7–10), Filtering & Search (FR11–15),
 Message Intake (FR16–19), AI Classification Pipeline (FR20–25), Signal Storage (FR26–28),
 Access & Authentication (FR29–32), Operational Health (FR33–34).
 
-**Non-Functional Requirements (15 total):**
+**Non-Functional Requirements (16 total):**
 
 Performance: 3s initial load, 300ms client ops, 500ms drawer open, 60s background poll.
 Security: HTTPS only (Phase 2), httpOnly/secure session cookies, env-only secrets, webhook validation.
 Reliability: 99% webhook uptime (Phase 2 target), AI retry recovery, daily backup (Phase 2), idempotent pipeline.
 Scalability: 5 groups + 1,000 msg/day pilot load — no architectural changes required.
-
-**Tone classification is removed from MVP scope entirely:**
-- No tone classifier output
-- No tone database fields
-- No tone API fields
-- No tone badges in UI
-- No tone-related tests, stories, or UI components
-- Rationale: tone is subjective, adds AI error risk, and the hokim can understand tone by reading raw message text directly.
+Accessibility: WCAG 2.1 AA internal target for contrast, keyboard navigation, focus visibility, semantic HTML, and core ARIA.
 
 ### Scale & Complexity
 
@@ -235,7 +228,7 @@ mahalla-ovozi/
 │               │   ├── lane-grid.tsx
 │               │   └── lane-column.tsx
 │               ├── signal-card/
-│               │   ├── signal-card.tsx       ← no tone badge
+│               │   ├── signal-card.tsx
 │               │   └── signal-card.test.tsx
 │               ├── context-drawer/
 │               │   ├── context-drawer.tsx
@@ -264,7 +257,8 @@ mahalla-ovozi/
     "db:migrate": "prisma migrate dev",
     "db:push":    "prisma db push",
     "db:studio":  "prisma studio",
-    "db:reset":   "prisma migrate reset"
+    "db:reset":   "prisma migrate reset",
+    "db:seed":    "prisma db seed"
   }
 }
 ```
@@ -392,7 +386,6 @@ model SignalMessage {
   hokim_related        Boolean  @default(false)
   keyword_matched      Boolean  @default(false)
   matched_keyword      String?  @db.VarChar(120)
-  // NOTE: No tone field — removed from MVP scope entirely
   short_label          String?  @db.VarChar(100)
   classified_at        DateTime
   created_at           DateTime @default(now())
@@ -721,7 +714,6 @@ interface Signal {
   textSource:         'text' | 'caption'
   category:           'water' | 'electricity' | 'gas' | 'waste'
   hokimRelated:       boolean
-  // NOTE: No tone field — removed from MVP scope
   keywordMatched:     boolean
   matchedKeyword:     string | null
   shortLabel:         string | null
@@ -898,7 +890,7 @@ Failed messages are NOT deleted from `raw_messages` — they are retried in the 
 
 - `DashboardPage` — owns all server state (TanStack Query) and all UI state; the sole data orchestrator
 - `LaneGrid` — layout only; receives pre-grouped `SignalsByCategory`, never fetches data
-- `SignalCard` — pure presentational; zero internal state; no tone badge
+- `SignalCard` — pure presentational; zero internal state
 - `FilterBar` — reads from `useFilters()` hook; emits changes up to `DashboardPage`
 - `OpsPage` — developer console; independent data fetching via its own queries
 
@@ -1240,16 +1232,14 @@ POST /api/ops/simulate-message → ops/simulator.ts → raw_messages
 
 ### Requirements Coverage
 
-All 34 functional requirements have architectural coverage.
-Tone-related portions of FR4, FR23 are removed per scope decision:
-- FR4 updated: signal item shows timestamp, sender, mahalla, raw text, hokim indicator (**no tone badge**)
-- FR23 updated: AI assigns category, hokim_related, short_label (**no tone**)
+All 35 functional requirements have architectural coverage, including FR6a, FR21a, and FR21b.
 
-All 15 NFRs addressed:
+All 16 NFRs addressed:
 - NFR5 (HTTPS): Phase 2 concern (Nginx + Let's Encrypt). Phase 1: local HTTP is acceptable.
 - NFR9 (disk encryption): VPS-level; operator responsibility in Phase 2.
 - NFR11 (99% webhook uptime): Phase 2 target with Nginx + health monitoring.
 - NFR13 (daily backup): Phase 2 concern (pg_dump cron).
+- NFR16 (WCAG 2.1 AA): covered by UX accessibility specifications and enforced through component-level acceptance criteria.
 
 ### Implementation Readiness
 
@@ -1309,7 +1299,7 @@ document will be written after Phase 1 pilot review, informed by real usage data
 2. `npm create vite@latest apps/web -- --template react-ts`
 3. `mkdir apps/server && cd apps/server && npm init -y`
 4. Root `tsconfig.json` (strict mode base config)
-5. `prisma/schema.prisma` with all 6 models
+5. `prisma/schema.prisma` with all 8 models
 6. Run `npx prisma migrate dev --name init`
 7. `.env.example` with all required variables documented
 8. Local PostgreSQL container or install (instructions in README)
@@ -1328,33 +1318,32 @@ It must be idempotent — re-running `db:seed` must not duplicate rows.
 
 ```typescript
 // prisma/seed.ts
-// Deterministic IDs ensure re-seeding is idempotent.
+// Stable unique fields ensure re-seeding is idempotent.
 
 // 1 — District
-const district = await prisma.district.upsert({
-  where:  { id: 'district-001' },
-  update: {},
-  create: { id: 'district-001', name: 'Yunusobod tumani' },
-})
+let district = await prisma.district.findFirst({ where: { name: 'Yunusobod tumani' } })
+if (!district) {
+  district = await prisma.district.create({ data: { name: 'Yunusobod tumani' } })
+}
 
 // 2 — Mahallas (fake chat IDs for local dev; real IDs set via Ops Console at pilot)
-for (const [id, name, chatId] of [
-  ['mahalla-001', 'Навбаҳор маҳалласи', -1001000000001n],
-  ['mahalla-002', 'Олмазор маҳалласи',  -1001000000002n],
+for (const [name, chatId] of [
+  ['Навбаҳор маҳалласи', -1001000000001n],
+  ['Олмазор маҳалласи',  -1001000000002n],
 ]) {
   await prisma.mahalla.upsert({
-    where:  { id },
+    where:  { telegram_chat_id: chatId },
     update: {},
-    create: { id, districtId: district.id, name, telegramChatId: chatId, botStatus: 'active' },
+    create: { district_id: district.id, name, telegram_chat_id: chatId, bot_status: 'active' },
   })
 }
 
 // 3 — Operator user (devpassword only; rotate before pilot via db:seed:pilot)
-const passwordHash = await argon2.hash('devpassword')
+const password_hash = await argon2.hash('devpassword')
 await prisma.user.upsert({
   where:  { username: 'operator' },
   update: {},
-  create: { username: 'operator', passwordHash, districtId: district.id, role: 'operator' },
+  create: { username: 'operator', password_hash, district_id: district.id },
 })
 ```
 
@@ -1364,4 +1353,4 @@ await prisma.user.upsert({
 - Pilot accounts are created by a separate `prisma/seed-pilot.ts` script reading credentials from env vars.
 - Seed does **not** pre-populate `keywords` — managed via Ops Console during pilot.
 - Seed does **not** pre-populate `raw_messages` or `signal_messages` — use the Ops Console message simulator.
-- Fake `telegramChatId` values must be negative BigInts (Telegram supergroup IDs are always negative). Reserve `-1001000000001` through `-1001000000099` for dev use to avoid conflicts with real IDs.
+- Fake `telegram_chat_id` values must be negative BigInts (Telegram supergroup IDs are always negative). Reserve `-1001000000001` through `-1001000000099` for dev use to avoid conflicts with real IDs.

@@ -9,11 +9,11 @@ classification:
   projectContext: 'greenfield'
   notes: 'Private internal tool operated by government — standard govtech compliance rules (FedRAMP, Section 508, open data) do not apply. Uzbekistan personal data law (ZRU-547) flagged; policy owned by client (hokim).'
 inputDocuments:
-  - 'project-raw-idea.md'
+  - 'docs/archive/project-raw-idea.md'
   - '_bmad-output/planning-artifacts/research/technical-telegram-ai-pipeline-research-2026-05-13.md'
   - '_bmad-output/planning-artifacts/research/domain-mahalla-governance-research-2026-05-13.md'
   - 'session-handoff.md'
-  - 'stakeholder-decisions-log.md'
+  - 'docs/stakeholder-decisions-log.md'
 workflowType: 'prd'
 briefCount: 0
 researchCount: 2
@@ -126,7 +126,7 @@ At the end of the pilot, evaluate success with lightweight human-in-the-loop rev
 
 ### MVP — Minimum Viable Product
 
-Exactly what is defined in `project-raw-idea.md` §6: one district, 3–5 mahalla groups, text/caption-only intake, AI signal filtering, five-lane dashboard, context drawer, filters (time/mahalla/search), session-based auth, and operational health monitoring for operators.
+Exactly what is defined in `docs/archive/project-raw-idea.md` §6: one district, 3–5 mahalla groups, text/caption-only intake, AI signal filtering, five-lane dashboard, context drawer, filters (time/mahalla/search), session-based auth, and operational health monitoring for operators.
 
 For MVP intake, “text/caption-only” means Telegram `message.text` and textual `caption` content are in scope when Telegram provides them. Media binaries themselves — photos, videos, voice, stickers, polls, files, and similar non-text payloads — remain out of scope and are not stored or analyzed.
 
@@ -293,9 +293,7 @@ Mahalla Ovozi's frontend is a **single-page application (SPA)** — a React (or 
 
 ### Accessibility Level
 
-Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG compliance target for pilot.
-
-> **Agent note:** "No formal WCAG compliance target" means no external audit is required — not that WCAG should be ignored. Per stakeholder decision (2026-05-22 in `stakeholder-decisions-log.md`), WCAG 2.1 AA is the internal quality target: implement correct contrast, keyboard navigation, focus management, semantic HTML, and core ARIA behavior. Skip only the formal audit paperwork.
+WCAG 2.1 AA is the internal MVP quality target for semantic HTML, keyboard navigation, focus visibility, contrast, and core ARIA behavior. Formal external accessibility audit is not required for the MVP pilot.
 
 ### Implementation Considerations
 
@@ -326,7 +324,7 @@ Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG
 - Signal item display: timestamp, sender reference, mahalla name, raw text snippet, hokim-related indicator
 - Context drawer: same mahalla + same category + selected time range; clicked message auto-highlighted
 - Telegram context action: stored signals can expose a Telegram message link when the viewer has group access
-- Filters: time range (1h / 3h / 6h / Today / custom up to 7 days), mahalla, keyword search
+- Filters: time range (1h / 3h / 6h / Today / Yesterday / custom up to 7 days), mahalla, keyword search
 - Telegram bot: text and text-caption capture from monitored supergroups via webhook; media binaries are ignored for MVP
 - 20-minute AI batch pipeline: structural pre-filter + configurable developer-side filtering mode + configurable AI classification model selected after implementation-time validation
 - Signal-only storage: raw messages deleted post-classification, signals retained 90 days
@@ -368,7 +366,7 @@ Semantic HTML structure; keyboard-navigable primary interactions. No formal WCAG
 
 ### Filtering & Search
 
-- **FR11:** Authorized users can filter all lanes by time range using presets (Last 1h, 3h, 6h, Today) and a custom range up to 7 days
+- **FR11:** Authorized users can filter all lanes by time range using presets (Last 1h, 3h, 6h, Today, Yesterday) and a custom range up to 7 days
 - **FR12:** Authorized users can filter all lanes by mahalla (All or a specific monitored mahalla)
 - **FR13:** Authorized users can search across visible signal items by raw message text, sender reference, and mahalla name
 - **FR14:** When mahalla filter is set to All, lanes display signals from all monitored mahallas
