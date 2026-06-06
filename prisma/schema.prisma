@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../apps/server/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url NOT declared here in Prisma 7 — configured in prisma.config.ts
+}
+
+model District {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  mahallas       Mahalla[]
+  users          User[]
+  batchHealths   BatchHealth[]
+  keywords       Keyword[]
+
+  @@map("districts")
+}
+
+model Mahalla {
+  id               Int       @id @default(autoincrement())
+  district_id      Int
+  name             String    @db.VarChar(200)
+  telegram_chat_id BigInt    @unique
+  bot_status       String    @default("active") @db.VarChar(20)
+  bot_last_seen_at DateTime?
+  created_at       DateTime  @default(now())
+
+  district       District       @relation(fields: [district_id], references: [id])
+  rawMessages    RawMessage[]
+  signalMessages SignalMessage[]
+
+  @@unique([id, district_id])
+  @@index([district_id])
+  @@index([telegram_chat_id])
+  @@map("mahallas")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  district_id   Int
+  username      String   @unique @db.VarChar(100)
+  password_hash String
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  district District @relation(fields: [district_id], references: [id])
+
+  @@index([district_id])
+  @@map("users")
+}
+
+model RawMessage {
+  id                  Int      @id @default(autoincrement())
+  telegram_update_id  Int      @unique
+  telegram_message_id Int
+  chat_id             BigInt
+  district_id         Int
+  mahalla_id          Int
+  sender_is_bot       Boolean  @default(false)
+  sender_display_name String?  @db.VarChar(300)
+  sender_username     String?  @db.VarChar(100)
+  text                String
+  text_source         String   @db.VarChar(10)
+  telegram_timestamp  DateTime
+  created_at          DateTime @default(now())
+
+  mahalla Mahalla @relation(fields: [mahalla_id, district_id], references: [id, district_id])
+
+  @@index([district_id])
+  @@index([mahalla_id])
+  @@index([created_at])
+  @@map("raw_messages")
+}
+
+model SignalMessage {
+  id                  Int      @id @default(autoincrement())
+  telegram_update_id  Int      @unique
+  telegram_message_id Int
+  district_id         Int
+  mahalla_id          Int
+  sender_display_name String?  @db.VarChar(300)
+  sender_username     String?  @db.VarChar(100)
+  telegram_timestamp  DateTime
+  raw_text            String
+  text_source         String   @db.VarChar(10)
+  category            String   @db.VarChar(20)
+  hokim_related       Boolean  @default(false)
+  keyword_matched     Boolean  @default(false)
+  matched_keyword     String?  @db.VarChar(120)
+  short_label         String?  @db.VarChar(100)
+  classified_at       DateTime
+  created_at          DateTime @default(now())
+
+  mahalla Mahalla @relation(fields: [mahalla_id, district_id], references: [id, district_id])
+
+  @@index([mahalla_id])
+  @@index([district_id])
+  @@index([category])
+  @@index([telegram_timestamp])
+  @@index([hokim_related])
+  @@index([keyword_matched])
+  @@map("signal_messages")
+}
+
+model Keyword {
+  id          Int      @id @default(autoincrement())
+  district_id Int
+  phrase      String   @db.VarChar(120)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  district District @relation(fields: [district_id], references: [id])
+
+  @@unique([district_id, phrase])
+  @@index([district_id, is_active])
+  @@map("keywords")
+}
+
+model BatchHealth {
+  id                         Int       @id @default(autoincrement())
+  district_id                Int
+  status                     String    @db.VarChar(20)
+  started_at                 DateTime
+  completed_at               DateTime?
+  intake_window_from         DateTime?
+  intake_window_to           DateTime?
+  messages_fetched           Int       @default(0)
+  signals_written            Int       @default(0)
+  ignored_count              Int       @default(0)
+  pre_filter_discards        Int       @default(0)
+  filter_mode                String    @db.VarChar(20)
+  keyword_matched_count      Int       @default(0)
+  keyword_skipped_count      Int       @default(0)
+  keyword_ai_signal_count    Int       @default(0)
+  keyword_ai_ignore_count    Int       @default(0)
+  no_keyword_ai_signal_count Int       @default(0)
+  no_keyword_ai_ignore_count Int       @default(0)
+  error_message              String?
+
+  district District @relation(fields: [district_id], references: [id])
+
+  @@index([district_id])
+  @@index([started_at])
+  @@map("batch_health")
+}
+
+model PipelineEvent {
+  id                  Int      @id @default(autoincrement())
+  event_type          String   @db.VarChar(30)
+  district_id         Int      // required: enables district-scoped GET /api/ops/pipeline-events
+  mahalla_id          Int?     // null for non-message-level events (e.g. batch-level errors)
+  telegram_update_id  Int?     // null if event precedes intake; stored for keyword_skip where raw_message_id is null
+  raw_message_id      Int?
+  signal_id           Int?
+  detail              Json     @default("{}")
+  created_at          DateTime @default(now())
+
+  @@index([district_id, created_at])
+  @@map("pipeline_events")
+}

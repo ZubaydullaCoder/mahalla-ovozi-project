@@ -137,7 +137,7 @@ useful enough for pilot deployment. See Section 16 for the Phase 2 roadmap.
 - `pnpm` v10.34.1 via Corepack — exact version pinned in root `package.json`
 - `tsx` — development server watch mode
 - `eslint` — linting
-- `vitest` — unit tests
+- `vitest` ^3.2.6 — unit tests
 
 ### Project Structure
 
@@ -253,14 +253,15 @@ mahalla-ovozi/
 {
   "scripts": {
     "dev:server": "tsx watch apps/server/src/web/index.ts",
-    "dev:web":    "vite --config apps/web/vite.config.ts",
-    "lint":       "eslint apps/",
+    "dev:web":    "pnpm --filter mahalla-ovozi-web dev",
+    "lint":       "eslint apps/ scripts/ prisma/*.ts prisma.config.ts vitest.config.ts",
     "test":       "vitest run",
+    "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push":    "prisma db push",
     "db:studio":  "prisma studio",
     "db:reset":   "prisma migrate reset",
-    "db:seed":    "prisma db seed"
+    "db:seed":    "pnpm db:generate && prisma db seed"
   }
 }
 ```
@@ -299,8 +300,6 @@ model District {
 
   mahallas      Mahalla[]
   users         User[]
-  rawMessages   RawMessage[]
-  signalMessages SignalMessage[]
   batchHealths  BatchHealth[]
   keywords      Keyword[]
 
@@ -323,6 +322,7 @@ model Mahalla {
   rawMessages    RawMessage[]
   signalMessages SignalMessage[]
 
+  @@unique([id, district_id])
   @@index([district_id])
   @@index([telegram_chat_id])
   @@map("mahallas")
@@ -362,8 +362,7 @@ model RawMessage {
   telegram_timestamp   DateTime
   created_at           DateTime @default(now())
 
-  district District @relation(fields: [district_id], references: [id])
-  mahalla  Mahalla  @relation(fields: [mahalla_id], references: [id])
+  mahalla Mahalla @relation(fields: [mahalla_id, district_id], references: [id, district_id])
 
   @@index([district_id])
   @@index([mahalla_id])
@@ -392,8 +391,7 @@ model SignalMessage {
   classified_at        DateTime
   created_at           DateTime @default(now())
 
-  district District @relation(fields: [district_id], references: [id])
-  mahalla  Mahalla  @relation(fields: [mahalla_id], references: [id])
+  mahalla Mahalla @relation(fields: [mahalla_id, district_id], references: [id, district_id])
 
   @@index([mahalla_id])
   @@index([district_id])
@@ -1311,15 +1309,16 @@ document will be written after Phase 1 pilot review, informed by real usage data
 5. Root `tsconfig.json` (strict mode base config)
 6. `prisma/schema.prisma` with all 8 models
 7. Run `pnpm db:migrate -- --name init`
-8. `.env.example` with all required variables documented
-9. Local PostgreSQL container or install (instructions in README)
+8. Run `pnpm db:generate`
+9. `.env.example` with all required variables documented
+10. Local PostgreSQL container or install (instructions in README)
 
 ---
 
 ### Seed Data Strategy
 
 All seed data lives in `prisma/seed.ts` and runs via `pnpm db:seed`
-(registered as `"prisma": { "seed": "tsx prisma/seed.ts" }` in `package.json`).
+(registered under `migrations.seed` in `prisma.config.ts`).
 
 Seed data is **required** before any story can be validated end-to-end.
 It must be idempotent — re-running `db:seed` must not duplicate rows.
@@ -1329,6 +1328,10 @@ It must be idempotent — re-running `db:seed` must not duplicate rows.
 ```typescript
 // prisma/seed.ts
 // Stable unique fields ensure re-seeding is idempotent.
+
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('Development seed is disabled in production')
+}
 
 // 1 — District
 let district = await prisma.district.findFirst({ where: { name: 'Yunusobod tumani' } })
@@ -1360,6 +1363,7 @@ await prisma.user.upsert({
 #### Seed Rules
 
 - **Never** commit real pilot credentials in `seed.ts`; `devpassword` is local dev only.
+- The development seed must fail when `NODE_ENV=production`.
 - Pilot accounts are created by a separate `prisma/seed-pilot.ts` script reading credentials from env vars.
 - Seed does **not** pre-populate `keywords` — managed via Ops Console during pilot.
 - Seed does **not** pre-populate `raw_messages` or `signal_messages` — use the Ops Console message simulator.

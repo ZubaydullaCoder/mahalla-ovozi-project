@@ -3,7 +3,7 @@
 **Epic:** 1 — Project Foundation & AI Signal Pipeline
 **Story ID:** 1.1
 **Story Key:** `1-1-workspace-scaffold-and-database-schema`
-**Status:** ready-for-dev
+**Status:** done
 **Created:** 2026-06-03
 
 ---
@@ -106,29 +106,30 @@ mahalla-ovozi/                         ← project root (already exists as git r
   "name": "mahalla-ovozi",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "packageManager": "pnpm@10.34.1",
   "scripts": {
     "dev:server": "tsx watch apps/server/src/web/index.ts",
-    "dev:web":    "vite --config apps/web/vite.config.ts",
-    "lint":       "eslint apps/",
+    "dev:web":    "pnpm --filter mahalla-ovozi-web dev",
+    "lint":       "eslint apps/ scripts/ prisma/*.ts prisma.config.ts vitest.config.ts",
     "test":       "vitest run",
+    "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push":    "prisma db push",
     "db:studio":  "prisma studio",
     "db:reset":   "prisma migrate reset",
-    "db:seed":    "prisma db seed"
+    "db:seed":    "pnpm db:generate && prisma db seed"
   },
   "devDependencies": {
     "typescript":        "^5.x",
     "eslint":            "^9.x",
     "@eslint/js":        "^9.x",
     "typescript-eslint": "^8.x",
-    "vitest":            "^2.x",
+    "vitest":            "^3.2.6",
     "tsx":               "^4.x",
     "prisma":            "7.8.0"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
 }
 ```
@@ -227,8 +228,9 @@ export default defineConfig({
 ```typescript
 import { PrismaClient } from '../generated/prisma/client.js'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { env } from './env.js'
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
@@ -356,8 +358,6 @@ model District {
 
   mahallas       Mahalla[]
   users          User[]
-  rawMessages    RawMessage[]
-  signalMessages SignalMessage[]
   batchHealths   BatchHealth[]
   keywords       Keyword[]
 
@@ -377,6 +377,7 @@ model Mahalla {
   rawMessages    RawMessage[]
   signalMessages SignalMessage[]
 
+  @@unique([id, district_id])
   @@index([district_id])
   @@index([telegram_chat_id])
   @@map("mahallas")
@@ -411,8 +412,7 @@ model RawMessage {
   telegram_timestamp  DateTime
   created_at          DateTime @default(now())
 
-  district District @relation(fields: [district_id], references: [id])
-  mahalla  Mahalla  @relation(fields: [mahalla_id], references: [id])
+  mahalla Mahalla @relation(fields: [mahalla_id, district_id], references: [id, district_id])
 
   @@index([district_id])
   @@index([mahalla_id])
@@ -439,8 +439,7 @@ model SignalMessage {
   classified_at       DateTime
   created_at          DateTime @default(now())
 
-  district District @relation(fields: [district_id], references: [id])
-  mahalla  Mahalla  @relation(fields: [mahalla_id], references: [id])
+  mahalla Mahalla @relation(fields: [mahalla_id, district_id], references: [id, district_id])
 
   @@index([mahalla_id])
   @@index([district_id])
@@ -523,6 +522,10 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Development seed is disabled in production')
+  }
+
   // 1 — District
   let district = await prisma.district.findFirst({
     where: { name: 'Yunusobod tumani' },
@@ -567,7 +570,10 @@ async function main() {
 }
 
 main()
-  .catch(console.error)
+  .catch((error: unknown) => {
+    console.error(error)
+    process.exitCode = 1
+  })
   .finally(() => prisma.$disconnect())
 ```
 
@@ -654,6 +660,8 @@ PORT=3001
 
 ```
 .env
+.env.*
+!.env.example
 node_modules/
 dist/
 apps/server/src/generated/
@@ -692,7 +700,11 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ['apps/server/src/generated/**', 'dist/**', 'node_modules/**'],
+    ignores: [
+      'apps/server/src/generated/**',
+      '**/dist/**',
+      '**/node_modules/**',
+    ],
   },
 )
 ```
@@ -729,6 +741,7 @@ This generates `apps/web/package.json`, `vite.config.ts`, `index.html`, `src/mai
     "react-router-dom":        "^6.30.x"
   },
   "devDependencies": {
+    "@types/node":           "^22.x",
     "@types/react":          "^18.x",
     "@types/react-dom":      "^18.x",
     "@vitejs/plugin-react":  "^6.x",
@@ -741,7 +754,7 @@ This generates `apps/web/package.json`, `vite.config.ts`, `index.html`, `src/mai
 > **Why override devDeps:** The Vite scaffold installs React 19, TypeScript 6, and ESLint 10 — all incompatible with this project's pinned versions. `@vitejs/plugin-react@6` is co-released with Vite 8 and works with React 18 (React is not in its peer deps). Root-level ESLint (`eslint`, `@eslint/js`, `typescript-eslint`) covers `apps/web/` via the root `eslint.config.js` — do not add ESLint again in `apps/web/package.json`.
 
 After overriding `package.json`, perform these structural updates:
-- **Replace** `apps/web/tsconfig.json` to extend root `../../tsconfig.json` (Vite scaffold generates its own tsconfig with `composite: true` — replace it entirely)
+- **Replace** `apps/web/tsconfig.json` to extend root `../../tsconfig.json`, while overriding browser-specific options: `module: ESNext`, `moduleResolution: Bundler`, DOM libraries, `types: ['vite/client']`, `allowImportingTsExtensions: true`, and `noEmit: true`
 - **Delete** `apps/web/tsconfig.app.json` — this Vite-generated file duplicates our root tsconfig and will conflict. Keep only `tsconfig.node.json` for the Vite plugin.
 - **Add** `apps/web/src/strings.ts` (placeholder above)
 - **Keep** default `App.tsx` — it will be replaced in Story 3.1
@@ -769,9 +782,10 @@ After overriding `package.json`, perform these structural updates:
 15. Create `.env.example` and `.gitignore`
 16. Run `pnpm install` from project root
 17. Run `pnpm db:migrate -- --name init` (requires PostgreSQL running)
-18. Run `pnpm db:seed`
-19. Run `pnpm lint` — fix any errors before marking done
-20. Run `pnpm test` — must pass
+18. Run `pnpm db:generate`
+19. Run `pnpm db:seed`
+20. Run `pnpm lint` — fix any errors before marking done
+21. Run `pnpm test` — must pass
 
 ---
 
@@ -808,7 +822,7 @@ Before marking this story done:
 
 4. **BigInt serialization:** `JSON.stringify` cannot serialize `BigInt`. Never pass raw Prisma rows with BigInt fields directly to Express `res.json()`. Always map in `signals/mapper.ts` (Story 3.2). In this story, BigInt only lives in the DB and seed script — no API exposure.
 
-5. **Vite web tsconfig:** After `pnpm create vite`, the generated `apps/web/tsconfig.json` has its own `compilerOptions`. Replace it to extend root tsconfig for consistency. Keep `apps/web/tsconfig.node.json` for Vite plugin.
+5. **Vite web tsconfig:** Extend the strict root config, but override the web package to use bundler resolution, DOM libraries, Vite client types, and `noEmit`. Keep `apps/web/tsconfig.node.json` for Vite plugin tooling.
 
 6. **`pnpm install` from root:** Always run from project root so pnpm resolves the full workspace and writes one root `pnpm-lock.yaml`. pnpm uses a content-addressable store and a symlinked, isolated dependency layout by default; do not assume npm-style flat hoisting.
 
@@ -816,15 +830,121 @@ Before marking this story done:
 
 8. **PostgreSQL must be running** before `db:migrate`. Provide `.env` with `DATABASE_URL` before running migrate (not committed — `.env` is gitignored).
 
-9. **Node version:** Vite 8 is ESM-only and requires `^20.19.0 || >=22.12.0`. Running on an older Node will fail at `pnpm dev:web`. Current dev machine (Node v24.14.1) satisfies this.
+9. **Node version:** Vite 8 is ESM-only and requires `^20.19.0 || >=22.12.0`. The root `engines.node` field documents this requirement. Current dev machine (Node v24.14.1) satisfies it.
+
+10. **Prisma 7 generation:** `prisma migrate dev` no longer generates Prisma Client. Run `pnpm db:generate` explicitly after schema changes; `pnpm db:seed` also generates before loading the seed script.
 
 ---
 
 ## Story Completion Status
 
-- [ ] All acceptance criteria met
-- [ ] Implementation steps completed
-- [ ] Pre-commit checklist passed
-- [ ] `pnpm lint` passes
-- [ ] `pnpm test` passes
-- [ ] Story ready for Code Review
+- [x] All acceptance criteria met
+- [x] Implementation steps completed
+- [x] Pre-commit checklist passed
+- [x] `pnpm lint` passes
+- [x] `pnpm test` passes
+- [x] Story ready for Code Review
+
+---
+
+## Dev Agent Record
+
+### Implementation Notes
+
+- **Date:** 2026-06-06
+- **Agent:** Antigravity (Claude Sonnet 4.6 Thinking)
+
+### Implementation Plan Used
+
+Implemented the scaffold using the ordered story steps, with the following recorded adaptations and recovery actions:
+
+1. **Vitest baseline** — owner approved `^3.2.6` during review; the story and architecture baseline now reflect that version.
+2. **Prisma 7 seed config** — Story spec mentions `package.json` prisma.seed field (Prisma ≤6 API). Prisma 7 reads seed from `prisma.config.ts` `migrations.seed`. Updated config accordingly.
+3. **dotenv import in prisma.config.ts** — Prisma 7 does NOT auto-load `.env`. Added `import 'dotenv/config'` per official docs.
+4. **pnpm workspace isolation** — `prisma/seed.ts` imports from `apps/server/src/generated` and needs `@prisma/adapter-pg` / `argon2`. Added these to root devDependencies so the seed runs correctly from project root.
+5. **pnpm install build approval** — Required `pnpm approve-builds` to approve native build scripts for `@prisma/engines`, `argon2`, `esbuild`, `prisma`.
+6. **antd 6.x** — Story spec said `^6.x`; confirmed latest stable is 6.4.3 ✅.
+7. **Vite 8 + plugin-react 6** — Used actual latest co-released versions (Vite 8.0.16, @vitejs/plugin-react 6.0.2).
+8. **Database drift recovery** — The local Docker PostgreSQL container had an untracked migration (`20260605184743_init`). A local `pnpm db:reset --force` was used to restore the development database before applying the tracked migration.
+
+### Completion Notes
+
+- `pnpm lint` — passes, including app, script, seed, and root TypeScript configuration sources
+- `pnpm test` — 1 test passes
+- Web production build and web/server TypeScript checks pass
+- Prisma schema validates and both tracked migrations are applied
+- `pnpm db:seed` — idempotency verified twice; production mode is rejected with a nonzero exit
+- Cross-district raw-message insertion is rejected by the composite foreign key
+- All 8 Prisma models created with the required field types
+- `apps/server/src/generated/prisma/` is generated locally and gitignored
+- Environment files are ignored except `.env.example`
+
+### File List
+
+All files created/modified (paths relative to repo root):
+
+**Created:**
+- `package.json`
+- `pnpm-workspace.yaml`
+- `tsconfig.json`
+- `vitest.config.ts`
+- `eslint.config.js`
+- `prisma.config.ts`
+- `.env.example`
+- `.gitignore` (updated)
+- `apps/server/package.json`
+- `apps/server/tsconfig.json`
+- `apps/server/src/shared/db.ts`
+- `apps/server/src/shared/env.ts`
+- `apps/server/src/shared/types.ts`
+- `apps/web/package.json` (overridden after Vite scaffold)
+- `apps/web/tsconfig.json` (replaced to extend root)
+- `apps/web/tsconfig.node.json`
+- `apps/web/vite.config.ts`
+- `apps/web/index.html`
+- `apps/web/README.md`
+- `apps/web/.gitignore`
+- `apps/web/public/favicon.svg`
+- `apps/web/public/icons.svg`
+- `apps/web/src/App.tsx`
+- `apps/web/src/App.css`
+- `apps/web/src/index.css`
+- `apps/web/src/main.tsx`
+- `apps/web/src/assets/hero.png`
+- `apps/web/src/assets/react.svg`
+- `apps/web/src/assets/vite.svg`
+- `apps/web/src/strings.ts`
+- `prisma/schema.prisma`
+- `prisma/seed.ts`
+- `prisma/migrations/20260606122006_init/migration.sql` (auto-generated)
+- `prisma/migrations/20260606183000_enforce_district_mahalla_consistency/migration.sql`
+- `prisma/migrations/migration_lock.toml`
+- `pnpm-lock.yaml`
+- `scripts/check-uz-strings.ts`
+
+**Deleted:**
+- `apps/web/tsconfig.app.json` (conflict with root tsconfig)
+- `apps/web/eslint.config.js` (duplicate — root covers apps/web)
+
+**Generated locally and gitignored:**
+- `apps/server/src/generated/prisma/` (Prisma client output)
+
+### Change Log
+
+- 2026-06-06: Initial implementation of Story 1.1 — workspace scaffold and database schema complete
+
+---
+
+## Review Findings
+
+- [x] [Review][Patch] Enforce district–mahalla consistency for `RawMessage` and `SignalMessage`; keep the temporary Phase 1 `PipelineEvent` log denormalized as approved [prisma/schema.prisma:59]
+- [x] [Review][Patch] Web scaffold does not type-check or build; restore browser/Vite types and a bundler-oriented web TypeScript configuration [apps/web/tsconfig.json:1]
+- [x] [Review][Patch] Root `dev:web` starts the wrong Vite version from the repository root instead of the web workspace [package.json:9]
+- [x] [Review][Patch] Fresh setup has no explicit Prisma 7 client-generation step, so the ignored generated client may be absent before seed/runtime imports [package.json:7]
+- [x] [Review][Patch] Seed failures are logged but return a successful process exit status [prisma/seed.ts:52]
+- [x] [Review][Patch] Restore `.env.*` ignore coverage while explicitly allowing `.env.example` [.gitignore:1]
+- [x] [Review][Patch] Prevent the development seed with its known operator password from running against production [prisma/seed.ts:37]
+- [x] [Review][Patch] Database initialization bypasses the existing validated environment module [apps/server/src/shared/db.ts:4]
+- [x] [Review][Patch] Declare the project Node.js engine requirement enforced by Vite 8 [package.json:1]
+- [x] [Review][Patch] Lint configuration includes scripts, but the lint command checks only `apps/` [package.json:10]
+- [x] [Review][Patch] Update the approved Vitest baseline to `^3.2.6` and correct inaccurate completion records: exact-step claim, incomplete file inventory, lockfile gitignore claim, and false Vitest registry rationale [1-1-workspace-scaffold-and-database-schema.md:126]
