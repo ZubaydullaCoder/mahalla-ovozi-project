@@ -1,6 +1,6 @@
 # Story 1.2: Express Server & Telegram Webhook Intake
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,31 +30,35 @@ so that resident messages start flowing into the database with full metadata for
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Install dependencies (AC: all)
-  - [ ] 1.1 Add `express@^4.22.2`, `grammy@^1.43.0`, `morgan@^1.11.0` to `apps/server/package.json` dependencies
-  - [ ] 1.2 Add `@types/express@^4`, `@types/morgan@^1` to `apps/server/package.json` devDependencies
-  - [ ] 1.3 Run `pnpm install` from project root
-- [ ] Task 2 — Expand env validation (AC: 1, 7)
-  - [ ] 2.1 Update `apps/server/src/shared/env.ts` — add `BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `FILTER_MODE`, `PORT` to `EnvSchema`
-- [ ] Task 3 — Create pino logger (AC: 3, 4, 5)
-  - [ ] 3.1 Create `apps/server/src/shared/logger.ts` — pino instance with `pino-pretty` in dev
-- [ ] Task 4 — Create Express server entry (AC: 1)
-  - [ ] 4.1 Create `apps/server/src/web/index.ts` — Express app, JSON body parser, morgan, webhook router mount, listen on `env.PORT`
-- [ ] Task 5 — Create grammY bot instance (AC: 1, 3, 4, 5)
-  - [ ] 5.1 Create `apps/server/src/bot/index.ts` — `new Bot(env.BOT_TOKEN)`, register `bot.on('message', ...)` and `bot.on('edited_message', ...)` handlers
-- [ ] Task 6 — Create webhook route (AC: 1, 7)
-  - [ ] 6.1 Create `apps/server/src/bot/webhook.ts` — `webhookCallback(bot, 'express', { secretToken: env.TELEGRAM_WEBHOOK_SECRET })`
-- [ ] Task 7 — Implement pre-filter pipeline (AC: 3, 4, 5, 6)
-  - [ ] 7.1 Create `apps/server/src/bot/filters/pipeline.ts` — F1/F2/F3 structural filters + mahalla resolution + idempotent upsert
-  - [ ] 7.2 Export individual filter functions for testability
-- [ ] Task 8 — Intake unit tests (AC: 6, 7, 8)
-  - [ ] 8.1 Create `apps/server/src/bot/filters/pipeline.test.ts` — F0, F1, F2, F3 unit tests including short civic text edge cases (`gaz?`, `suv?`, `tok?`), pure emoji, bot commands, empty-after-trim, missing `from` field
-  - [ ] 8.2 Add test: duplicate `telegram_update_id` — verify upsert with `update: {}` does not throw and does not create a second row (AC-6)
-  - [ ] 8.3 Add test: invalid/missing `X-Telegram-Bot-Api-Secret-Token` returns HTTP 401 before pipeline runs (AC-7). Prefer testing the Express route/middleware directly without new dependencies; if `supertest` is used, add `supertest` and `@types/supertest` as devDependencies in Task 1.
-  - [ ] 8.4 Add test for edited-message discard/logging at the `bot/index.ts` handler level; do not test edited messages in `pipeline.test.ts` because edited updates do not enter `pipeline()`.
-- [ ] Task 9 — Quality gate verification (AC: 8)
-  - [ ] 9.1 `pnpm lint` passes
-  - [ ] 9.2 `pnpm test` passes (including existing `check-uz-strings` test)
+- [x] Task 1 — Install dependencies (AC: all)
+  - [x] 1.1 Add `express@^4.22.2`, `grammy@^1.43.0`, `morgan@^1.11.0` to `apps/server/package.json` dependencies
+  - [x] 1.2 Add `@types/express@^4`, `@types/morgan@^1` to `apps/server/package.json` devDependencies
+  - [x] 1.3 Run `pnpm install` from project root (111 packages added)
+- [x] Task 2 — Expand env validation (AC: 1, 7)
+  - [x] 2.1 Update `apps/server/src/shared/env.ts` — added `BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `FILTER_MODE`, `PORT` to `EnvSchema`
+- [x] Task 3 — Create pino logger (AC: 3, 4, 5)
+  - [x] 3.1 Create `apps/server/src/shared/logger.ts` — pino instance with `pino-pretty` in dev
+- [x] Task 4 — Create Express server entry (AC: 1)
+  - [x] 4.1 Create `apps/server/src/web/index.ts` — Express app, JSON body parser, morgan, webhook router mount, listen on `env.PORT`
+- [x] Task 5 — Create grammY bot instance (AC: 1, 3, 4, 5)
+  - [x] 5.1 Create `apps/server/src/bot/index.ts` — `new Bot(env.BOT_TOKEN)`, `bot.on('message', ...)` → pipeline, `bot.on('edited_message', ...)` → structured pino log
+- [x] Task 6 — Create webhook route (AC: 1, 7)
+  - [x] 6.1 Create `apps/server/src/bot/webhook.ts` — `webhookCallback(bot, 'express', { secretToken: env.TELEGRAM_WEBHOOK_SECRET })`
+- [x] Task 7 — Implement pre-filter pipeline (AC: 3, 4, 5, 6)
+  - [x] 7.1 Create `apps/server/src/bot/filters/pipeline.ts` — F0/F1/F2/F3 structural filters + mahalla resolution + idempotent upsert
+  - [x] 7.2 Exported `hasMissingSender`, `isBot`, `hasNoText`, `isTrivialContent` individually for testability
+- [x] Task 8 — Intake unit tests (AC: 6, 7, 8)
+  - [x] 8.1 Create `apps/server/src/bot/filters/pipeline.test.ts` — F0, F1, F2, F3 unit tests including short civic text edge cases (`gaz?`, `suv?`, `tok?`), pure emoji, bot commands, empty-after-trim, missing `from` field
+  - [x] 8.2 Added test: duplicate `telegram_update_id` — verifies upsert with `update: {}` does not throw and is called twice (AC-6)
+  - [x] 8.3 Added test: invalid/missing `X-Telegram-Bot-Api-Secret-Token` returns HTTP 401. Used `supertest` + lightweight Express middleware mirroring grammY's header-check logic. Added `supertest` + `@types/supertest` as devDependencies.
+  - [x] 8.4 Added test for edited-message discard/logging at the `bot/index.ts` handler level; verified pipeline is NOT called and logger.info IS called.
+- [x] Task 9 — Quality gate verification (AC: 8)
+  - [x] 9.1 `pnpm lint` passes — 0 errors
+  - [x] 9.2 `pnpm test` passes — 26/26 tests pass (includes existing `check-uz-strings` test)
+
+### Review Findings
+
+- [x] [Review][Patch] Invalid webhook requests initialize the bot before secret validation [apps/server/src/bot/webhook.ts:10] — Fixed by adding a webhook secret pre-guard before body parsing and `webhookCallback`, then updating AC-7 tests to exercise the real router and assert invalid requests do not call `bot.init()` or `handleUpdate`.
 
 ## Dev Notes
 
@@ -354,10 +358,31 @@ Architecture specifies `connect-pg-simple` v9.x (pinned). Latest is v10.0.0 (bre
 
 ### Agent Model Used
 
-<!-- filled by dev agent -->
+Claude Sonnet 4.6 (Thinking) via Antigravity IDE — 2026-06-07
 
 ### Debug Log References
 
+- **vi.mock hoisting fix:** `mockFindUnique`/`mockUpsert` in `vi.mock` factory referenced vars before initialization. Fixed with `vi.hoisted()` pattern.
+- **AC-7 timeout fix:** `webhookCallback(bot, 'express', ...)` triggers `bot.init()` → live `getMe` call → 5 s timeout with mock token. Replaced with lightweight Express middleware mirroring grammY's header-check logic (no bot instantiation needed).
+- **Lint fix:** Removed two unused `mockWarn`/`mockInfo` variable declarations leftover from draft.
+
 ### Completion Notes List
 
+- All 9 tasks and all subtasks completed in a single execution session.
+- AC-1 through AC-8 satisfied: text/caption capture, bot discard, no-text discard, trivial-content discard (narrow — no length threshold), idempotent upsert, secret-token 401, quality gates green.
+- `isTrivialContent` F3 filter: pure-emoji detection uses `/^[\p{Extended_Pictographic}\p{Emoji_Component}\s]+$/u` with `!/\w/u.test()` guard — correctly passes `gaz?`, `suv?`, `tok?`, `?` and rejects `😀😂🎉`.
+- `FILTER_MODE` env var read and validated in `env.ts` per scope boundary; mode-branching logic deferred to Story 1.4.
+- `supertest@^7` + `@types/supertest@^6` added as devDependencies (per Task 8.3 guidance).
+- 26 tests pass (25 new + 1 existing `check-uz-strings`).
+
 ### File List
+
+- `apps/server/package.json` — MODIFIED: added express, grammy, morgan, @types/express, @types/morgan, supertest, @types/supertest
+- `apps/server/src/shared/env.ts` — MODIFIED: added PORT, BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, FILTER_MODE
+- `apps/server/src/shared/logger.ts` — NEW: pino logger with pino-pretty in non-production
+- `apps/server/src/web/index.ts` — NEW: Express server entry point
+- `apps/server/src/bot/index.ts` — NEW: grammY Bot instance with message + edited_message handlers
+- `apps/server/src/bot/webhook.ts` — NEW: Express router POST /webhook with webhookCallback
+- `apps/server/src/bot/filters/pipeline.ts` — NEW: F0/F1/F2/F3 pre-filter + mahalla lookup + idempotent upsert
+- `apps/server/src/bot/filters/pipeline.test.ts` — NEW: 25-test suite covering all ACs
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: 1-2 status → review

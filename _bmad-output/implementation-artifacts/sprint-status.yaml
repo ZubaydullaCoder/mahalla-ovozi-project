@@ -49,7 +49,7 @@ development_status:
   # ─────────────────────────────────────────────────────────────────────────
   epic-1: in-progress
   1-1-workspace-scaffold-and-database-schema: done
-  1-2-express-server-and-telegram-webhook-intake: ready-for-dev
+  1-2-express-server-and-telegram-webhook-intake: done
   1-3-bot-connectivity-monitoring: backlog
   1-4-keyword-registry-and-three-mode-filtering-pipeline: backlog
   1-5-ai-classifier-batch-processor: backlog
