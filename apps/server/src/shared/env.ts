@@ -6,7 +6,7 @@ const EnvSchema = z.object({
   PORT:                    z.coerce.number().int().positive().default(3001),
   BOT_TOKEN:               z.string().min(1),
   TELEGRAM_WEBHOOK_SECRET: z.string().min(1),
-  FILTER_MODE:             z.enum(['ai_full', 'keyword_gate', 'shadow_compare']).default('ai_full'),
+  FILTER_MODE:             z.enum(['ai_full', 'keyword_gate', 'shadow_compare']).default('keyword_gate'),
 })
 
 export const env = EnvSchema.parse(process.env)

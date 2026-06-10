@@ -45,7 +45,7 @@ processing, Uzbek NLP, district-scoped multi-user auth, Developer Ops Console.
 - express-session + connect-pg-simple — PostgreSQL-backed session store (no Redis in Phase 1)
 - node-cron v4.x — in-process scheduler (no BullMQ/Redis in Phase 1)
 - AI model: configurable Gemini model via `AI_MODEL` env var (Google AI only in Phase 1)
-- Filtering mode: configurable via `FILTER_MODE` env var (`ai_full` default, `keyword_gate`, `shadow_compare`)
+- Filtering mode: configurable via `FILTER_MODE` env var (`keyword_gate` default for demo/pilot, `ai_full` fallback, `shadow_compare` validation)
 - Keyword registry: centralized PostgreSQL-backed Ops Console registry; manually edited by developer/operator only
 - Pre-filter thresholds and keyword coverage: provisional until real-data validation
 
@@ -81,7 +81,7 @@ hardens the same product for the real pilot deployment.
 - Express.js server (simpler middleware chain, more LLM-assisted examples, clean grammY integration)
 - Prisma ORM (fast schema iteration, guided migration, auto-generated TypeScript types)
 - Developer Ops Console at `/ops` — full pipeline visibility for HITL validation
-- Developer-side filtering modes: full AI, keyword-gated AI, and shadow comparison
+- Developer-side filtering modes: keyword-gated AI as preferred demo/pilot default, full AI fallback, and shadow comparison
 - Manual keyword registry in Ops Console; keywords are not AI-generated
 - Message simulator in Ops Console — inject test messages without real Telegram groups
 - Real bot integration with test groups in parallel — both paths feed the same pipeline
@@ -95,7 +95,7 @@ patterns are production-quality. Only infrastructure and queue management are si
 - Ops Console can simulate messages, trigger classification, and show pipeline decisions.
 - Ops Console can show active filtering mode, manage keywords, and compare keyword coverage against AI outcomes.
 - Classifier behavior is benchmarked on realistic or real labeled mahalla messages.
-- Keyword-gated missed-signal risk is measured before `keyword_gate` is selected for pilot.
+- Keyword-gated missed-signal risk is measured during validation; switch to `ai_full` if keyword coverage is not acceptable for pilot.
 - Dashboard scan flow, filters, context drawer, auth, and delayed-signal health state are demo-ready.
 - Bot removal/connectivity health state is validated in a test group.
 - Retry/restart checks show no raw/signal data loss for normal Phase 1 failure cases.
@@ -998,7 +998,7 @@ All intake filtering and mode routing starts from `src/bot/filters/pipeline.ts`:
 **Forwarded messages:** Treated as original. Sender = the forwarder.
 **Anonymous admin posts:** Discarded by F1 (`GroupAnonymousBot` has `is_bot === true`). Known limitation.
 
-`FILTER_MODE=ai_full` is the default. The active mode is read from env at server startup and displayed in
+`FILTER_MODE=keyword_gate` is the default for demo/pilot cost and noise control. The active mode is read from env at server startup and displayed in
 Ops Console only. Runtime switching from the dashboard is out of scope.
 
 ---
@@ -1056,7 +1056,7 @@ BOT_TOKEN=                   # from @BotFather
 TELEGRAM_WEBHOOK_SECRET=     # random string; set same in Telegram webhook config
 AI_API_KEY=                  # Google AI API key
 AI_MODEL=gemini-2.5-flash    # configurable Gemini model selection
-FILTER_MODE=ai_full          # ai_full | keyword_gate | shadow_compare; developer/operator only
+FILTER_MODE=keyword_gate     # keyword_gate | ai_full | shadow_compare; developer/operator only
 OPS_ENABLED=false            # true only during Phase 1 local validation
 OPS_SECRET=                  # optional; required if accessing Ops Console over a tunnel/non-localhost
 NODE_ENV=development

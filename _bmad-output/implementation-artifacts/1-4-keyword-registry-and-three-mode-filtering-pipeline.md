@@ -92,7 +92,7 @@ So that the pipeline correctly routes messages based on the active `FILTER_MODE`
 
 5. **No schema migration needed.** All required models (`Keyword`, `PipelineEvent`, `RawMessage`, `SignalMessage`) already exist from Story 1.1. The `keyword_matched` and `matched_keyword` fields already exist on `SignalMessage`.
 
-6. **FILTER_MODE already validated.** The `env.FILTER_MODE` is already parsed and validated by Zod in `shared/env.ts`. Default is `ai_full`.
+6. **FILTER_MODE already validated.** The `env.FILTER_MODE` is already parsed and validated by Zod in `shared/env.ts`. Default is `keyword_gate` after the 2026-06-10 course correction; `ai_full` and `shadow_compare` remain supported.
 
 ### File Locations (Architecture §3)
 
@@ -387,3 +387,4 @@ Claude Sonnet 4.6 (Thinking)
 
 - 2026-06-09: Implemented Story 1.4 — keyword registry and three-mode filtering pipeline. Created keywords/ module (matcher + query), updated pipeline.ts with FILTER_MODE routing, extended pipeline.test.ts with 10 new tests. 60/60 tests pass, lint clean, tsc clean.
 - 2026-06-09: Applied code review patches (findings 2 & 3). `getActiveKeywords()` now orders by `id ASC` for deterministic first-match-wins. Matcher now returns `trimmedPhrase` instead of raw DB value so `pipeline_events.detail.matchedPhrase` is always clean. Finding 1 (pipeline_events idempotency) deferred with explicit Story 1.5 aggregation deduplication requirement documented. 61/61 tests pass.
+- 2026-06-10: Course correction approved — `keyword_gate` is now the preferred/default demo-pilot filtering mode based on real mahalla group analysis showing low signal density. `ai_full` remains available as fallback and `shadow_compare` remains available for validation.

@@ -682,9 +682,8 @@ In Phase 2, the Ops Console is:
 - `pipeline_events` table is dropped (not migrated to Phase 2 schema)
 - Batch status moves to the existing `/api/health` operator endpoint
 - System health moves to the existing `/api/health` operator endpoint
-- If `keyword_gate` is selected for pilot, `FILTER_MODE` and the `keywords` table remain part of the production pipeline even though the Phase 1 Ops Console UI is disabled.
-- If keyword management is still needed during pilot, add a minimal production-safe operator keyword management route or CLI before disabling the Phase 1 Ops Console. Do not launch `keyword_gate` with no way to update stale keywords.
+- Because `keyword_gate` is the preferred demo/pilot default, `FILTER_MODE` and the `keywords` table remain part of the production pipeline even though the Phase 1 Ops Console UI is disabled.
+- Add a minimal production-safe operator keyword management route or CLI before disabling the Phase 1 Ops Console. Do not launch `keyword_gate` with no way to update stale keywords.
 
 The Ops Console served its purpose in Phase 1: validating pipeline correctness during development.
 In Phase 2, production observability is handled by structured pino logs + operator health endpoint.
-

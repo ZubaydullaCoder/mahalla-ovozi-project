@@ -44,7 +44,7 @@ The core insight is that Telegram groups are where civic signals surface earlies
 
 Mahalla Ovozi's differentiation is its discipline: it solves exactly one problem and refuses all scope creep. No issue cards. No resolution workflow. No confidence scores. No automated truth claims. The product's value is a clean, evidence-backed signal stream that lets a busy non-technical leader scan what residents are saying in 60 seconds, not 60 minutes.
 
-The 20-minute AI batch pipeline keeps the system fast enough for live monitoring while controlling unnecessary AI cost. Phase 1 validates three developer/operator-side filtering modes: full AI classification after structural pre-filtering, keyword-gated AI classification, and shadow comparison between the two. Exact AI model, filtering default, and cost estimates are implementation-time decisions and must be revalidated against current provider pricing, SDK support, latency, Uzbek-language benchmark quality, and real mahalla message coverage.
+The 20-minute AI batch pipeline keeps the system fast enough for live monitoring while controlling unnecessary AI cost. Phase 1 supports three developer/operator-side filtering modes: full AI classification after structural pre-filtering, keyword-gated AI classification, and shadow comparison between the two. Based on owner analysis of real mahalla Telegram groups showing low signal density, keyword-gated filtering is the preferred demo/pilot default for cost and dashboard-noise control. Full AI classification remains available as a fallback, and shadow comparison remains available to validate missed-signal risk.
 
 ---
 
@@ -98,7 +98,7 @@ AI accuracy targets are directional for the pilot — hard thresholds will be se
 
 If classification quality is insufficient, the pilot will extend prompt engineering, few-shot examples, and/or model selection before declaring go/no-go.
 
-Filtering-mode quality is also validated during Phase 1. Keyword-gated filtering is acceptable for pilot only if real/test data shows the missed non-keyword signal risk is acceptable to the owner/client. Until that is proven, full AI classification remains the safest baseline.
+Filtering-mode quality is also validated during Phase 1. Keyword-gated filtering is the preferred demo/pilot default because real mahalla group analysis indicates signal messages are rare, but keyword coverage must still be tested against real/test data. If missed non-keyword signal risk is unacceptable, the operator can switch to `ai_full`; `shadow_compare` is used when coverage needs evidence before or during pilot validation.
 
 ### Measurable Outcomes
 
@@ -337,7 +337,7 @@ WCAG 2.1 AA is the internal MVP quality target for semantic HTML, keyboard navig
 
 ### Risk Mitigation Strategy
 
-**Technical risks:** AI classification quality and keyword-gated missed-signal risk are the highest-risk assumptions. Mitigation: Phase 1 validation with real/test group data, shadow comparison metrics, prompt engineering, keyword iteration, and model selection before go/no-go decision. Exact model/provider/filtering mode must remain configurable until validated.
+**Technical risks:** AI classification quality and keyword-gated missed-signal risk are the highest-risk assumptions. Mitigation: Phase 1 validation with real/test group data, shadow comparison metrics, prompt engineering, keyword iteration, and model selection before go/no-go decision. Exact model/provider/filtering mode must remain configurable, with `keyword_gate` preferred for demo/pilot unless validation shows missed-signal risk is unacceptable.
 
 **Operational risks:** Bot setup requires confirmed Telegram group/bot configuration. Mitigation: documented setup checklist, real test group validation, and operator walkthrough with client before pilot launch.
 

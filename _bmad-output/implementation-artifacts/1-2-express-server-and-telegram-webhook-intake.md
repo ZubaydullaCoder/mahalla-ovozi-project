@@ -167,7 +167,7 @@ logger.info({ districtId, chatId: chatId.toString(), filter: 'F1', updateId }, '
 logger.info(`Discarded bot message from chat ${chatId}`)
 ```
 
-**Scope boundary for `FILTER_MODE`:** The env var is read and validated in `env.ts`, but the actual mode-branching logic (keyword_gate skip, shadow_compare tagging) is **deferred to Story 1.4**. In this story, all F1/F2/F3-passing messages are written to `raw_messages` regardless of mode — this is correct `ai_full` behavior which is the default.
+**Scope boundary for `FILTER_MODE`:** The env var is read and validated in `env.ts`, but the actual mode-branching logic (keyword_gate skip, shadow_compare tagging) is **deferred to Story 1.4**. In this story, all F1/F2/F3-passing messages are written to `raw_messages` regardless of mode — this matched the original `ai_full` baseline at story completion. 2026-06-10 course correction: the default mode is now `keyword_gate`; Story 1.4 owns the routing behavior.
 
 **Forwarded messages:** Treated as original. `from` = the forwarder, not the original author.
 
@@ -184,7 +184,7 @@ const EnvSchema = z.object({
   PORT:                     z.coerce.number().int().positive().default(3001),
   BOT_TOKEN:                z.string().min(1),
   TELEGRAM_WEBHOOK_SECRET:  z.string().min(1),
-  FILTER_MODE:              z.enum(['ai_full', 'keyword_gate', 'shadow_compare']).default('ai_full'),
+  FILTER_MODE:              z.enum(['ai_full', 'keyword_gate', 'shadow_compare']).default('keyword_gate'),
 })
 
 export const env = EnvSchema.parse(process.env)

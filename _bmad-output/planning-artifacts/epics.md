@@ -288,7 +288,7 @@ So that I have accurate visibility into which mahalla groups are actively monito
 
 As a **developer/operator**,
 I want a centralized keyword registry in the database and the full three-mode filtering pipeline (`ai_full`, `keyword_gate`, `shadow_compare`) wired into the webhook intake,
-So that the pipeline correctly routes messages based on the active `FILTER_MODE` env var and keyword match outcomes are recorded for comparison.
+So that the pipeline correctly routes messages based on the active `FILTER_MODE` env var, supports `keyword_gate` as the preferred demo/pilot default, and records keyword match outcomes for comparison.
 
 **Acceptance Criteria:**
 
@@ -297,6 +297,7 @@ So that the pipeline correctly routes messages based on the active `FILTER_MODE`
 **Then** in `keyword_gate` mode: only keyword-matched messages are written to `raw_messages`; non-keyword messages are counted as `keyword_skipped_count` in pipeline events and NOT written
 **And** in `ai_full` mode: all F1/F2/F3-passing messages are written to `raw_messages` regardless of keyword match
 **And** in `shadow_compare` mode: all F1/F2/F3-passing messages are written; keyword match status is recorded in `pipeline_events.detail` for comparison metrics
+**And** the default `FILTER_MODE` is `keyword_gate`; `ai_full` remains available as fallback and `shadow_compare` remains available for coverage validation
 **And** keyword matching is case-insensitive phrase matching; inactive keywords (`is_active=false`) are ignored; empty keyword list returns no match
 **And** `districtId` for keyword lookup is derived from `mahalla.district_id` — never from the request body
 **And** Vitest tests cover: case-insensitive match, inactive keyword ignored, empty keyword list, all three FILTER_MODE routing paths
