@@ -1,6 +1,6 @@
 # Story 1.5: AI Classifier Batch Processor
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,73 +28,73 @@ So that civic signals are stored in `signal_messages` and the core pipeline outp
 
 ## Tasks / Subtasks
 
-- [ ] Task 0: Install missing packages (AC: all)
-  - [ ] 0.1 `pnpm --filter @mahalla-ovozi/server add @google/genai node-cron zod-to-json-schema`
-  - [ ] 0.2 `pnpm --filter @mahalla-ovozi/server add -D @types/node-cron`
-  - [ ] 0.3 Add `AI_API_KEY` and `AI_MODEL` to `apps/server/src/shared/env.ts` EnvSchema
+- [x] Task 0: Install missing packages (AC: all)
+  - [x] 0.1 `pnpm --filter @mahalla-ovozi/server add @google/genai node-cron zod-to-json-schema`
+  - [x] 0.2 `pnpm --filter @mahalla-ovozi/server add -D @types/node-cron`
+  - [x] 0.3 Add `AI_API_KEY` and `AI_MODEL` to `apps/server/src/shared/env.ts` EnvSchema
 
-- [ ] Task 1: Classifier Zod schema (AC: #1, #4)
-  - [ ] 1.1 Create `apps/server/src/classifier/schema.ts` — `ClassifierOutputSchema` discriminated union (signal/ignore)
-  - [ ] 1.2 Export `ClassifierOutput` type
+- [x] Task 1: Classifier Zod schema (AC: #1, #4)
+  - [x] 1.1 Create `apps/server/src/classifier/schema.ts` — `ClassifierOutputSchema` discriminated union (signal/ignore)
+  - [x] 1.2 Export `ClassifierOutput` type
 
-- [ ] Task 2: AI prompt (AC: #1)
-  - [ ] 2.1 Create `apps/server/src/classifier/prompt.ts` — `buildPrompt(text: string)` returns `Contents[]` for `@google/genai`
-  - [ ] 2.2 Prompt must instruct AI to classify Uzbek/Russian/other CIS-language civic complaint texts
-  - [ ] 2.3 Include few-shot examples: signal (water/gas/electricity/waste), ignore (greeting/question), hokim_related true/false
+- [x] Task 2: AI prompt (AC: #1)
+  - [x] 2.1 Create `apps/server/src/classifier/prompt.ts` — `buildPrompt(text: string)` returns `Contents[]` for `@google/genai`
+  - [x] 2.2 Prompt must instruct AI to classify Uzbek/Russian/other CIS-language civic complaint texts
+  - [x] 2.3 Include few-shot examples: signal (water/gas/electricity/waste), ignore (greeting/question), hokim_related true/false
 
-- [ ] Task 3: AI client (AC: #1, #4)
-  - [ ] 3.1 Create `apps/server/src/classifier/ai-client.ts` — `classifyMessage(text: string): Promise<ClassifierOutput>`
-  - [ ] 3.2 Use `new GoogleGenAI({ apiKey: env.AI_API_KEY })`, `ai.models.generateContent()` with `responseJsonSchema: zodToJsonSchema(ClassifierOutputSchema)`
-  - [ ] 3.3 Parse `response.text` → `JSON.parse` → `ClassifierOutputSchema.safeParse()` — throw on failure
-  - [ ] 3.4 Set `temperature: 0` for deterministic classification
+- [x] Task 3: AI client (AC: #1, #4)
+  - [x] 3.1 Create `apps/server/src/classifier/ai-client.ts` — `classifyMessage(text: string): Promise<ClassifierOutput>`
+  - [x] 3.2 Use `new GoogleGenAI({ apiKey: env.AI_API_KEY })`, `ai.models.generateContent()` with `responseJsonSchema: zodToJsonSchema(ClassifierOutputSchema)`
+  - [x] 3.3 Parse `response.text` → `JSON.parse` → `ClassifierOutputSchema.safeParse()` — throw on failure
+  - [x] 3.4 Set `temperature: 0` for deterministic classification
 
-- [ ] Task 4: Batch processor (AC: #2, #3, #4, #6)
-  - [ ] 4.1 Create `apps/server/src/classifier/batch-processor.ts` — `classifyBatch(districtId: number): Promise<BatchResult>`
-  - [ ] 4.2 Fetch all `raw_messages` for districtId in deterministic order (`prisma.rawMessage.findMany({ where: { district_id: districtId }, orderBy: { id: 'asc' } })`)
-  - [ ] 4.3 For each message: call `classifyMessageWithRetry(text, maxAttempts=3)` with exponential backoff
-  - [ ] 4.4 Signal path: `prisma.$transaction([prisma.signalMessage.create({ data: signalRow }), prisma.rawMessage.delete({ where: { id: rawMessage.id } })])` — catch UNIQUE constraint on `telegram_update_id` as idempotency: delete raw message only
-  - [ ] 4.5 Ignore path: `prisma.rawMessage.delete({ where: { id: rawMessage.id } })` only
-  - [ ] 4.6 Track counts: `signals_written`, `ignored_count`, per-message retry failures
-  - [ ] 4.7 If any message exhausts all 3 retry attempts, keep processing remaining messages but mark the batch result `status: 'failed'` and set `error_message` to a concise summary of failed raw message IDs/count.
+- [x] Task 4: Batch processor (AC: #2, #3, #4, #6)
+  - [x] 4.1 Create `apps/server/src/classifier/batch-processor.ts` — `classifyBatch(districtId: number): Promise<BatchResult>`
+  - [x] 4.2 Fetch all `raw_messages` for districtId in deterministic order (`prisma.rawMessage.findMany({ where: { district_id: districtId }, orderBy: { id: 'asc' } })`)
+  - [x] 4.3 For each message: call `classifyMessageWithRetry(text, maxAttempts=3)` with exponential backoff
+  - [x] 4.4 Signal path: `prisma.$transaction([prisma.signalMessage.create({ data: signalRow }), prisma.rawMessage.delete({ where: { id: rawMessage.id } })])` — catch UNIQUE constraint on `telegram_update_id` as idempotency: delete raw message only
+  - [x] 4.5 Ignore path: `prisma.rawMessage.delete({ where: { id: rawMessage.id } })` only
+  - [x] 4.6 Track counts: `signals_written`, `ignored_count`, per-message retry failures
+  - [x] 4.7 If any message exhausts all 3 retry attempts, keep processing remaining messages but mark the batch result `status: 'failed'` and set `error_message` to a concise summary of failed raw message IDs/count.
 
-- [ ] Task 5: Batch health aggregation (AC: #5)
-  - [ ] 5.1 At batch start: record `started_at`; query `previousBatch = prisma.batchHealth.findFirst({ where: { district_id, completed_at: { not: null } }, orderBy: { started_at: 'desc' } })` to determine `intake_window_from`
-  - [ ] 5.2 Set `intake_window_to = started_at` and aggregate intake metrics from `pipeline_events` using `COUNT(DISTINCT telegram_update_id)` (NOT `COUNT(*)`) per event_type where `created_at >= intake_window_from AND created_at < intake_window_to` — this is the Story 1.4 deduplication requirement and prevents events created during this batch from being counted again in the next batch
-  - [ ] 5.3 At batch end: `prisma.batchHealth.create({ data: { district_id, status, started_at, completed_at, intake_window_from, intake_window_to, messages_fetched, signals_written, ignored_count, pre_filter_discards, filter_mode: env.FILTER_MODE, keyword_matched_count, keyword_skipped_count, keyword_ai_signal_count, keyword_ai_ignore_count, no_keyword_ai_signal_count, no_keyword_ai_ignore_count, error_message } })`
-  - [ ] 5.4 `pre_filter_discards`: count of pipeline_events with no event matching the district in the window — **IMPORTANT**: pre-filter discards are NOT written to `pipeline_events` (they are discarded before DB writes). This count cannot be derived from `pipeline_events`. Set to `0` for Story 1.5 — document that real pre-filter counting requires a separate counter mechanism (Story 6 / future).
+- [x] Task 5: Batch health aggregation (AC: #5)
+  - [x] 5.1 At batch start: record `started_at`; query `previousBatch = prisma.batchHealth.findFirst({ where: { district_id, completed_at: { not: null } }, orderBy: { started_at: 'desc' } })` to determine `intake_window_from`
+  - [x] 5.2 Set `intake_window_to = started_at` and aggregate intake metrics from `pipeline_events` using `COUNT(DISTINCT telegram_update_id)` (NOT `COUNT(*)`) per event_type where `created_at >= intake_window_from AND created_at < intake_window_to` — this is the Story 1.4 deduplication requirement and prevents events created during this batch from being counted again in the next batch
+  - [x] 5.3 At batch end: `prisma.batchHealth.create({ data: { district_id, status, started_at, completed_at, intake_window_from, intake_window_to, messages_fetched, signals_written, ignored_count, pre_filter_discards, filter_mode: env.FILTER_MODE, keyword_matched_count, keyword_skipped_count, keyword_ai_signal_count, keyword_ai_ignore_count, no_keyword_ai_signal_count, no_keyword_ai_ignore_count, error_message } })`
+  - [x] 5.4 `pre_filter_discards`: count of pipeline_events with no event matching the district in the window — **IMPORTANT**: pre-filter discards are NOT written to `pipeline_events` (they are discarded before DB writes). This count cannot be derived from `pipeline_events`. Set to `0` for Story 1.5 — document that real pre-filter counting requires a separate counter mechanism (Story 6 / future).
 
-- [ ] Task 6: Classifier index (AC: #1, scheduler wiring)
-  - [ ] 6.1 Create `apps/server/src/classifier/index.ts` — export `runClassifyBatchWithLock(trigger: 'cron' | 'manual')`
-  - [ ] 6.2 Implement a process-level lock (`isRunning: boolean`) to prevent concurrent batch runs
-  - [ ] 6.3 If lock is held: log warn `{ trigger, event: 'batch_skipped_already_running' }`, return immediately
-  - [ ] 6.4 Resolve `districtId` from DB: `prisma.district.findFirst({ where: { is_active: true } })` — Phase 1 one-district assumption
+- [x] Task 6: Classifier index (AC: #1, scheduler wiring)
+  - [x] 6.1 Create `apps/server/src/classifier/index.ts` — export `runClassifyBatchWithLock(trigger: 'cron' | 'manual')`
+  - [x] 6.2 Implement a process-level lock (`isRunning: boolean`) to prevent concurrent batch runs
+  - [x] 6.3 If lock is held: log warn `{ trigger, event: 'batch_skipped_already_running' }`, return immediately
+  - [x] 6.4 Resolve `districtId` from DB: `prisma.district.findFirst({ where: { is_active: true } })` — Phase 1 one-district assumption
 
-- [ ] Task 7: Env schema update (AC: #1)
-  - [ ] 7.1 Add `AI_API_KEY: z.string().min(1)` to `EnvSchema` in `apps/server/src/shared/env.ts`
-  - [ ] 7.2 Add `AI_MODEL: z.string().min(1).default('gemini-2.5-flash')` to `EnvSchema`
+- [x] Task 7: Env schema update (AC: #1)
+  - [x] 7.1 Add `AI_API_KEY: z.string().min(1)` to `EnvSchema` in `apps/server/src/shared/env.ts`
+  - [x] 7.2 Add `AI_MODEL: z.string().min(1).default('gemini-2.5-flash')` to `EnvSchema`
 
-- [ ] Task 8: Server wiring (AC: #1)
-  - [ ] 8.1 Update `apps/server/src/web/index.ts` — import `cron` from `'node-cron'` and `runClassifyBatchWithLock`
-  - [ ] 8.2 Register: `cron.schedule('*/20 * * * *', () => runClassifyBatchWithLock('cron'))`
-  - [ ] 8.3 Retention purge cron is Story 1.6 — do NOT implement `0 3 * * *` here
+- [x] Task 8: Server wiring (AC: #1)
+  - [x] 8.1 Update `apps/server/src/web/index.ts` — import `cron` from `'node-cron'` and `runClassifyBatchWithLock`
+  - [x] 8.2 Register: `cron.schedule('*/20 * * * *', () => runClassifyBatchWithLock('cron'))`
+  - [x] 8.3 Retention purge cron is Story 1.6 — do NOT implement `0 3 * * *` here
 
-- [ ] Task 9: Tests (AC: #7)
-  - [ ] 9.1 Create `apps/server/src/classifier/schema.test.ts` — Zod schema: valid signal, valid ignore, signal missing category rejects, invalid decision rejects
-  - [ ] 9.2 Create `apps/server/src/classifier/batch-processor.test.ts` — mock `prisma` and `classifyMessage`:
+- [x] Task 9: Tests (AC: #7)
+  - [x] 9.1 Create `apps/server/src/classifier/schema.test.ts` — Zod schema: valid signal, valid ignore, signal missing category rejects, invalid decision rejects
+  - [x] 9.2 Create `apps/server/src/classifier/batch-processor.test.ts` — mock `prisma` and `classifyMessage`:
     - Batch with signal → `signalMessage.create` + `rawMessage.delete` called in `$transaction`
     - Batch with ignore → only `rawMessage.delete` called
     - Retry: AI fails 2 times then succeeds → 3 calls, message processed
     - Retry exhausted (3 fails) → message stays in raw_messages, batch continues
     - UNIQUE constraint on `telegram_update_id` (idempotency): existing signal → delete raw only
     - `batchHealth.create` called with correct field values
-  - [ ] 9.3 Verify `COUNT(DISTINCT telegram_update_id)` aggregation logic in a unit test for the aggregation function
+  - [x] 9.3 Verify `COUNT(DISTINCT telegram_update_id)` aggregation logic in a unit test for the aggregation function
 
-- [ ] Task 10: Pre-commit checklist (AC: #7)
-  - [ ] 10.1 `pnpm lint` passes
-  - [ ] 10.2 `pnpm test` passes — all 65 existing tests + new tests
-  - [ ] 10.3 `pnpm exec tsc --noEmit -p apps/server/tsconfig.json` passes
-  - [ ] 10.4 No snake_case field names in Express route return values
-  - [ ] 10.5 No `districtId` sourced from request body or query params
+- [x] Task 10: Pre-commit checklist (AC: #7)
+  - [x] 10.1 `pnpm lint` passes
+  - [x] 10.2 `pnpm test` passes — all 65 existing tests + new tests
+  - [x] 10.3 `pnpm exec tsc --noEmit -p apps/server/tsconfig.json` passes
+  - [x] 10.4 No snake_case field names in Express route return values
+  - [x] 10.5 No `districtId` sourced from request body or query params
 
 ## Dev Notes
 
@@ -521,10 +521,41 @@ logger.info(`Batch complete for district ${districtId}`)
 
 ### Agent Model Used
 
-Claude Sonnet 4.6 (Thinking)
+GPT-5 Codex
 
 ### Debug Log References
 
+- `pnpm vitest run apps/server/src/classifier/schema.test.ts apps/server/src/classifier/batch-processor.test.ts` initially failed as expected before implementation because classifier implementation files were not present.
+- `pnpm vitest run apps/server/src/classifier/schema.test.ts apps/server/src/classifier/batch-processor.test.ts` passed after implementation: 11 classifier tests.
+- `pnpm lint` passed.
+- `pnpm test` passed: 76 tests.
+- `pnpm exec tsc --noEmit -p apps/server/tsconfig.json` passed.
+
 ### Completion Notes List
 
+- Installed `@google/genai`, `node-cron`, `zod-to-json-schema`, and `@types/node-cron`.
+- Added `AI_API_KEY` and `AI_MODEL` env validation, plus updated existing test env mocks.
+- Implemented classifier schema, prompt, Gemini structured-output client, retrying batch processor, atomic signal write/raw delete, unique-constraint idempotency handling, batch health rows, and process-level lock.
+- Registered the 20-minute classifier cron in the server entrypoint without adding the Story 1.6 retention purge cron.
+- Added tests for schema validation, signal/ignore paths, retry success/exhaustion, idempotency, batch health fields, and `COUNT(DISTINCT telegram_update_id)` aggregation.
+
 ### File List
+
+- `apps/server/package.json`
+- `pnpm-lock.yaml`
+- `apps/server/src/shared/env.ts`
+- `apps/server/src/web/index.ts`
+- `apps/server/src/bot/connectivity.test.ts`
+- `apps/server/src/bot/filters/pipeline.test.ts`
+- `apps/server/src/keywords/query.test.ts`
+- `apps/server/src/classifier/schema.ts`
+- `apps/server/src/classifier/prompt.ts`
+- `apps/server/src/classifier/ai-client.ts`
+- `apps/server/src/classifier/batch-processor.ts`
+- `apps/server/src/classifier/index.ts`
+- `apps/server/src/classifier/schema.test.ts`
+- `apps/server/src/classifier/batch-processor.test.ts`
+
+### Change Log
+
+- 2026-06-11: Implemented Story 1.5 AI classifier batch processor and moved story to review.

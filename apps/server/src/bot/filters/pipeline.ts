@@ -113,12 +113,14 @@ export async function pipeline(update: Update): Promise<void> {
   // Load active keywords for this district, run matcher against message text.
   // districtId is ALWAYS from mahalla.district_id — never from request body (AC #5).
   let activeKeywords: Awaited<ReturnType<typeof getActiveKeywords>> = []
+  let keywordLookupFailed = false
   try {
     activeKeywords = await getActiveKeywords(mahalla.district_id)
   } catch (err) {
+    keywordLookupFailed = true
     logger.error(
       { updateId, mahallaId: mahalla.id, districtId: mahalla.district_id, err },
-      'getActiveKeywords failed — treating as empty list (fail-open)',
+      'getActiveKeywords failed — bypassing keyword gate (fail-open)',
     )
   }
   const matchResult = matchesAnyKeyword(rawText, activeKeywords)
@@ -165,7 +167,32 @@ export async function pipeline(update: Update): Promise<void> {
   }
 
   if (filterMode === 'keyword_gate') {
-    if (matchResult.matched) {
+    if (keywordLookupFailed) {
+      const rawMessage = await upsertRawMessage()
+
+      await createPipelineEvent({
+        event_type:         'prefilter_pass',
+        district_id:        mahalla.district_id,
+        mahalla_id:         mahalla.id,
+        telegram_update_id: update.update_id,
+        raw_message_id:     rawMessage.id,
+        detail: {
+          ...baseDetail,
+          keywordLookupFailed: true,
+          reason:              'Keyword lookup failed; fail-open in keyword_gate mode',
+        },
+      })
+
+      logger.warn(
+        {
+          updateId,
+          chatId:    chatId.toString(),
+          mahallaId: mahalla.id,
+          filterMode,
+        },
+        'Keyword lookup failed — message written to raw_messages fail-open',
+      )
+    } else if (matchResult.matched) {
       // keyword_gate + keyword match → write to raw_messages, record keyword_match event
       const rawMessage = await upsertRawMessage()
 

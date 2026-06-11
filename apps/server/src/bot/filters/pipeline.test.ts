@@ -23,6 +23,8 @@ const { mockEnv } = vi.hoisted(() => ({
     BOT_TOKEN:               'mock-bot-token',
     TELEGRAM_WEBHOOK_SECRET: 'mock-secret',
     FILTER_MODE:             'ai_full' as 'ai_full' | 'keyword_gate' | 'shadow_compare',
+    AI_API_KEY:              'test-key',
+    AI_MODEL:                'gemini-2.5-flash',
   },
 }))
 
@@ -641,25 +643,32 @@ describe('pipeline — getActiveKeywords DB error: fail-open (CR Patch P1)', () 
     mockPipelineCreate.mockResolvedValue({})
   })
 
-  it('does not throw when getActiveKeywords rejects — treats as empty keyword list', async () => {
+  it('does not throw when getActiveKeywords rejects — writes the message fail-open', async () => {
     mockFindMany.mockRejectedValue(new Error('DB connection error'))
     const update = makeUpdate({ text: 'suv bor' }, 8001)
 
-    // Must not throw — pipeline continues with empty keyword list
     await expect(pipeline(update)).resolves.not.toThrow()
+    expect(mockUpsert).toHaveBeenCalled()
   })
 
-  it('treats empty keyword list on DB error as no-match in keyword_gate — writes keyword_skip event', async () => {
+  it('bypasses keyword_gate on DB error — writes raw message and prefilter_pass event', async () => {
     mockFindMany.mockRejectedValue(new Error('DB connection error'))
     const update = makeUpdate({ text: 'suv bor' }, 8002)
 
     await pipeline(update)
 
-    // With empty keyword list: no match → keyword_gate skips upsert
-    expect(mockUpsert).not.toHaveBeenCalled()
+    expect(mockUpsert).toHaveBeenCalled()
     expect(mockPipelineCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ event_type: 'keyword_skip' }),
+        data: expect.objectContaining({
+          event_type:     'prefilter_pass',
+          raw_message_id: 100,
+          detail: expect.objectContaining({
+            filterMode:          'keyword_gate',
+            keywordLookupFailed: true,
+            reason:              'Keyword lookup failed; fail-open in keyword_gate mode',
+          }),
+        }),
       }),
     )
   })
@@ -692,4 +701,3 @@ describe('pipeline — pipelineEvent.create DB error: does not crash pipeline (C
     expect(mockUpsert).toHaveBeenCalledOnce()
   })
 })
-

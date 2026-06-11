@@ -9,6 +9,8 @@ vi.mock('../shared/env.js', () => ({
     NODE_ENV:                'test',
     PORT:                    3001,
     TELEGRAM_WEBHOOK_SECRET: 'mock-secret',
+    AI_API_KEY:              'test-key',
+    AI_MODEL:                'gemini-2.5-flash',
   },
 }))
 
