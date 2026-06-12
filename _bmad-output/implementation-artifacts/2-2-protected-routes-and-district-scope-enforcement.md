@@ -1,6 +1,6 @@
 # Story 2.2: Protected Routes & District Scope Enforcement
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,38 +24,38 @@ so that unauthenticated users are rejected and no cross-district data leakage is
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `requireAuth` middleware (AC: 1, 2)
-  - [ ] 1.1 Create `apps/server/src/auth/middleware.ts`
-  - [ ] 1.2 Implement `requireAuth` that checks `req.session.userId` and `req.session.districtId` exist
-  - [ ] 1.3 On missing session data → respond 401 with standard error shape
-  - [ ] 1.4 On valid session → call `next()` (districtId is already on `req.session`)
+- [x] Task 1: Create `requireAuth` middleware (AC: 1, 2)
+  - [x] 1.1 Create `apps/server/src/auth/middleware.ts`
+  - [x] 1.2 Implement `requireAuth` that checks `req.session.userId` and `req.session.districtId` exist
+  - [x] 1.3 On missing session data → respond 401 with standard error shape
+  - [x] 1.4 On valid session → call `next()` (districtId is already on `req.session`)
 
-- [ ] Task 2: Export `requireAuth` from auth barrel (AC: 1)
-  - [ ] 2.1 Add `requireAuth` export to `apps/server/src/auth/index.ts`
+- [x] Task 2: Export `requireAuth` from auth barrel (AC: 1)
+  - [x] 2.1 Add `requireAuth` export to `apps/server/src/auth/index.ts`
 
-- [ ] Task 3: Wire `requireAuth` in `web/index.ts` (AC: 1, 2)
-  - [ ] 3.1 Import `requireAuth` from `../auth/index.js`
-  - [ ] 3.2 Apply `requireAuth` to a route group covering all `/api/*` routes EXCEPT `/api/auth/*`
-  - [ ] 3.3 Maintain correct middleware ordering: `session → json → webhookRouter → authRouter → requireAuth → protected routes`
+- [x] Task 3: Wire `requireAuth` in `web/index.ts` (AC: 1, 2)
+  - [x] 3.1 Import `requireAuth` from `../auth/index.js`
+  - [x] 3.2 Apply `requireAuth` to a route group covering all `/api/*` routes EXCEPT `/api/auth/*`
+  - [x] 3.3 Maintain correct middleware ordering: `session → json → webhookRouter → authRouter → requireAuth → protected routes`
 
-- [ ] Task 4: Create placeholder protected routes to validate middleware (AC: 2, 3)
-  - [ ] 4.1 Add a minimal `GET /api/signals` placeholder route that is behind `requireAuth` and returns `[]` for now (actual signal queries arrive in Epic 3 Story 3.2)
-  - [ ] 4.2 Add a minimal `GET /api/mahallas` placeholder route that queries `mahallas WHERE district_id = req.session.districtId`
-  - [ ] 4.3 Add a minimal `GET /api/health` placeholder route that returns the future-compatible minimum health shape `{ status: 'no_data', lastBatchAt: null, lastBatchStatus: null, messagesProcessed: null, signalsWritten: null, queueDepth: 0 }`
+- [x] Task 4: Create placeholder protected routes to validate middleware (AC: 2, 3)
+  - [x] 4.1 Add a minimal `GET /api/signals` placeholder route that is behind `requireAuth` and returns `[]` for now (actual signal queries arrive in Epic 3 Story 3.2)
+  - [x] 4.2 Add a minimal `GET /api/mahallas` placeholder route that queries `mahallas WHERE district_id = req.session.districtId`
+  - [x] 4.3 Add a minimal `GET /api/health` placeholder route that returns the future-compatible minimum health shape `{ status: 'no_data', lastBatchAt: null, lastBatchStatus: null, messagesProcessed: null, signalsWritten: null, queueDepth: 0 }`
 
-- [ ] Task 5: Write tests in `apps/server/src/auth/middleware.test.ts` (AC: 4)
-  - [ ] 5.1 Test: request without session cookie → 401
-  - [ ] 5.2 Test: request with `userId` but missing `districtId` in session → 401
-  - [ ] 5.3 Test: request with valid session → handler receives correct districtId from session
-  - [ ] 5.4 Test: request with `districtId` in query param → districtId from session used, not from query
-  - [ ] 5.5 Test: request with `districtId` in body → districtId from session used, not from body
-  - [ ] 5.6 Test: `/api/auth/*` route registered before `requireAuth` remains reachable without a session
-  - [ ] 5.7 Test: `/webhook` or a webhook-shaped non-`/api` route remains outside the `/api` auth guard
+- [x] Task 5: Write tests in `apps/server/src/auth/middleware.test.ts` (AC: 4)
+  - [x] 5.1 Test: request without session cookie → 401
+  - [x] 5.2 Test: request with `userId` but missing `districtId` in session → 401
+  - [x] 5.3 Test: request with valid session → handler receives correct districtId from session
+  - [x] 5.4 Test: request with `districtId` in query param → districtId from session used, not from query
+  - [x] 5.5 Test: request with `districtId` in body → districtId from session used, not from body
+  - [x] 5.6 Test: `/api/auth/*` route registered before `requireAuth` remains reachable without a session
+  - [x] 5.7 Test: `/webhook` or a webhook-shaped non-`/api` route remains outside the `/api` auth guard
 
-- [ ] Task 6: Pre-commit verification (AC: 4)
-  - [ ] 6.1 `pnpm lint` passes
-  - [ ] 6.2 `pnpm test` passes (all existing tests + new middleware tests)
-  - [ ] 6.3 `pnpm exec tsc -p apps/server/tsconfig.json --noEmit` passes
+- [x] Task 6: Pre-commit verification (AC: 4)
+  - [x] 6.1 `pnpm lint` passes
+  - [x] 6.2 `pnpm test` passes (all existing tests + new middleware tests)
+  - [x] 6.3 `pnpm exec tsc -p apps/server/tsconfig.json --noEmit` passes
 
 ## Dev Notes
 
@@ -444,10 +444,26 @@ describe('requireAuth middleware', () => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (Thinking)
 
 ### Debug Log References
 
+No issues encountered. Clean implementation — typecheck, lint, and all 93 tests passed on first run.
+
 ### Completion Notes List
 
+- Created `requireAuth` middleware — synchronous session check for `userId` + `districtId`, 401 with AR16 error shape on failure
+- Re-exported `requireAuth` from `auth/index.ts` barrel
+- Wired `requireAuth` in `web/index.ts` after `authRouter` using path-scoped `app.use('/api', requireAuth)`
+- Added 3 placeholder protected routes: `GET /api/signals` (empty array), `GET /api/mahallas` (real district-scoped Prisma query), `GET /api/health` (future-compatible `no_data` shape)
+- Each placeholder has TODO comment referencing the story that replaces it
+- Post-review fix: wrapped the placeholder `/api/mahallas` Prisma query in local error handling for Express 4 async safety
+- 7 unit tests covering: no session → 401, missing districtId → 401, valid session → 200, query param injection ignored, body injection ignored, auth routes exempt, webhook exempt
+- All 93 tests pass (10 test files), `pnpm lint` clean, `tsc --noEmit` clean
+
 ### File List
+
+- `apps/server/src/auth/middleware.ts` — NEW — requireAuth middleware
+- `apps/server/src/auth/middleware.test.ts` — NEW — 7 unit tests for requireAuth
+- `apps/server/src/auth/index.ts` — MODIFIED — added requireAuth re-export
+- `apps/server/src/web/index.ts` — MODIFIED — wired requireAuth + 3 placeholder protected routes
