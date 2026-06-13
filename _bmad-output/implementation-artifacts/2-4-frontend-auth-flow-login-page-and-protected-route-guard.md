@@ -1,6 +1,6 @@
 # Story 2.4: Frontend Auth Flow (Login Page & Protected Route Guard)
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,43 +24,52 @@ so that the dashboard is only accessible after successful authentication.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Wire providers and routing in `main.tsx` + `router.tsx` (AC: 1)
-  - [ ] 1.1 Update `apps/web/vite.config.ts` — add `/api` proxy to `http://localhost:3001`
-  - [ ] 1.2 Update `apps/web/index.html` — set title to `Маҳалла Овози`
-  - [ ] 1.3 Create `apps/web/src/theme.ts` — AntD v6 `mahallaTheme` ConfigProvider token overrides
-  - [ ] 1.4 Rewrite `apps/web/src/main.tsx` — wrap app with `QueryClientProvider`, `ConfigProvider`, `BrowserRouter`
-  - [ ] 1.5 Create `apps/web/src/router.tsx` — define `AppRoutes` with `/login`, `/`, `/ops` routes
-  - [ ] 1.6 Create `apps/web/src/types.ts` — API response interface types
+- [x] Task 1: Wire providers and routing in `main.tsx` + `router.tsx` (AC: 1)
+  - [x] 1.1 Update `apps/web/vite.config.ts` — add `/api` proxy to `http://localhost:3001`
+  - [x] 1.2 Update `apps/web/index.html` — set title to `Маҳалла Овози`
+  - [x] 1.3 Create `apps/web/src/theme.ts` — AntD v6 `mahallaTheme` ConfigProvider token overrides
+  - [x] 1.4 Rewrite `apps/web/src/main.tsx` — wrap app with `QueryClientProvider`, `ConfigProvider`, `BrowserRouter`
+  - [x] 1.5 Create `apps/web/src/router.tsx` — define `AppRoutes` with `/login`, `/`, `/ops` routes
+  - [x] 1.6 Create `apps/web/src/types.ts` — API response interface types
 
-- [ ] Task 2: Implement `AuthGuard` component (AC: 1)
-  - [ ] 2.1 Create `apps/web/src/components/auth-guard.tsx`
-  - [ ] 2.2 On mount, probe `GET /api/signals` — if HTTP 401 → redirect to `/login`; any other status (currently `200 []` placeholder, future full `200` response) → render children
-  - [ ] 2.3 Show nothing (return `null`) while auth check is in-flight — do NOT render children before check resolves
+- [x] Task 2: Implement `AuthGuard` component (AC: 1)
+  - [x] 2.1 Create `apps/web/src/components/auth-guard.tsx`
+  - [x] 2.2 On mount, probe `GET /api/signals` — if HTTP 401 → redirect to `/login`; any other status (currently `200 []` placeholder, future full `200` response) → render children
+  - [x] 2.3 Show nothing (return `null`) while auth check is in-flight — do NOT render children before check resolves
 
-- [ ] Task 3: Implement `api/auth.ts` mutations (AC: 2, 3)
-  - [ ] 3.1 Create `apps/web/src/api/auth.ts` with `login()` and `logout()` fetch functions
-  - [ ] 3.2 `login()` returns the response object; throws with `{ status }` on non-2xx
-  - [ ] 3.3 `logout()` calls `POST /api/auth/logout`, returns `{ ok: true }` on success
+- [x] Task 3: Implement `api/auth.ts` mutations (AC: 2, 3)
+  - [x] 3.1 Create `apps/web/src/api/auth.ts` with `login()` and `logout()` fetch functions
+  - [x] 3.2 `login()` returns the response object; throws with `{ status }` on non-2xx
+  - [x] 3.3 `logout()` calls `POST /api/auth/logout`, returns `{ ok: true }` on success
 
-- [ ] Task 4: Implement `LoginPage` (AC: 2, 3, 4, 5)
-  - [ ] 4.1 Create `apps/web/src/pages/login-page.tsx` using AntD Form, Input, Input.Password, Button
-  - [ ] 4.2 On submit: call `login()` → on 200: `navigate('/')` → on 401: show `strings.login.errorInvalidCredentials` → on 429: show `strings.login.errorRateLimit`
-  - [ ] 4.3 No registration link, no password-reset link on the form
-  - [ ] 4.4 Error displayed inline (above submit button), not as modal/toast/alert component
-  - [ ] 4.5 Submit button shows loading state while request is in-flight
+- [x] Task 4: Implement `LoginPage` (AC: 2, 3, 4, 5)
+  - [x] 4.1 Create `apps/web/src/pages/login-page.tsx` using AntD Form, Input, Input.Password, Button
+  - [x] 4.2 On submit: call `login()` → on 200: `navigate('/')` → on 401: show `strings.login.errorInvalidCredentials` → on 429: show `strings.login.errorRateLimit`
+  - [x] 4.3 No registration link, no password-reset link on the form
+  - [x] 4.4 Error displayed inline (above submit button), not as modal/toast/alert component
+  - [x] 4.5 Submit button shows loading state while request is in-flight
 
-- [ ] Task 5: Create stub pages for Epic 3+ routes (AC: 1)
-  - [ ] 5.1 Create `apps/web/src/pages/dashboard-page.tsx` — minimal placeholder only
-  - [ ] 5.2 Create `apps/web/src/pages/ops-page.tsx` — minimal placeholder only
+- [x] Task 5: Create stub pages for Epic 3+ routes (AC: 1)
+  - [x] 5.1 Create `apps/web/src/pages/dashboard-page.tsx` — minimal placeholder only
+  - [x] 5.2 Create `apps/web/src/pages/ops-page.tsx` — minimal placeholder only
 
-- [ ] Task 6: Add Uzbek Cyrillic strings to `strings.ts` (AC: 5)
-  - [ ] 6.1 Update `apps/web/src/strings.ts` with all login page strings in Uzbek Cyrillic
-  - [ ] 6.2 Verify no Latin Uzbek words appear (strings that would match `check-uz-strings` patterns)
+- [x] Task 6: Add Uzbek Cyrillic strings to `strings.ts` (AC: 5)
+  - [x] 6.1 Update `apps/web/src/strings.ts` with all login page strings in Uzbek Cyrillic
+  - [x] 6.2 Verify no Latin Uzbek words appear (strings that would match `check-uz-strings` patterns)
 
-- [ ] Task 7: Pre-commit verification (AC: 5)
-  - [ ] 7.1 `pnpm lint` passes
-  - [ ] 7.2 `pnpm test` passes (97 existing server tests + check-uz-strings + any new tests)
-  - [ ] 7.3 `pnpm exec tsc -b apps/web/tsconfig.json` passes (frontend type check)
+- [x] Task 7: Pre-commit verification (AC: 5)
+  - [x] 7.1 `pnpm lint` passes
+  - [x] 7.2 `pnpm test` passes (97 existing server tests + check-uz-strings + any new tests)
+  - [x] 7.3 `pnpm exec tsc -b apps/web/tsconfig.json` passes (frontend type check)
+
+### Review Findings
+
+- [x] [Review][Patch] Harden `AuthGuard` status handling and clean up stale auth probe requests [apps/web/src/components/auth-guard.tsx:21]
+- [x] [Review][Patch] Preserve auth HTTP status for non-JSON responses and map only 401 to invalid credentials [apps/web/src/api/auth.ts:24]
+- [x] [Review][Patch] Make `logout()` return `{ ok: true }` defensively on successful empty responses [apps/web/src/api/auth.ts:48]
+- [x] [Review][Patch] Add durable accessible labels for login username and password fields [apps/web/src/pages/login-page.tsx:66]
+- [x] [Review][Patch] Make the login card responsive on narrow screens and align radius with the 8px card convention [apps/web/src/pages/login-page.tsx:116]
+- [x] [Review][Patch] Move visible stub page text to centralized Uzbek Cyrillic strings [apps/web/src/pages/dashboard-page.tsx:4]
 
 ## Dev Notes
 
@@ -752,22 +761,42 @@ pnpm lint
 
 ### Agent Model Used
 
-_To be filled by dev agent_
+Claude Sonnet 4.6 (Thinking)
 
 ### Debug Log References
 
-_To be filled by dev agent_
+- `check-uz-strings.ts` initially failed: comment in `strings.ts` contained the word `mahalla` (Latin). Fixed by replacing comment with Cyrillic-only wording. Root cause: script scans entire file including comments, not just string values.
 
 ### Completion Notes List
 
-_To be filled by dev agent_
+- ✅ Task 1: Wired full provider stack in `main.tsx` (QueryClientProvider → ConfigProvider → BrowserRouter → AppRoutes). Created `theme.ts` with exact UX design token values. Created `router.tsx` with `/login` (open), `/` (AuthGuard-protected), `/ops` (no client guard, server-side only). Created `types.ts` for auth API response shapes. Added `/api` proxy in `vite.config.ts`. Updated `index.html` with Маҳалла Овози title and Inter/Outfit Google Fonts. Deleted Vite scaffold `App.tsx` and `App.css`.
+- ✅ Task 2: Implemented `AuthGuard` — probes `GET /api/signals` with `credentials: 'same-origin'`. Returns `null` while loading, `<Navigate to="/login" replace />` on 401/network-error, renders children otherwise. Future-proof: works identically when Epic 3 implements the real signals endpoint.
+- ✅ Task 3: Implemented `api/auth.ts` — `login()`, `logout()`, and `AuthError` class. All fetch calls use `credentials: 'same-origin'`. `login()` returns `{ ok: true }` on success (no userId/districtId exposed to client). `AuthError` carries `status` for 401 vs 429 differentiation in LoginPage.
+- ✅ Task 4: Implemented `LoginPage` — AntD Form with username/password fields, loading button state, inline error banner (`role="alert"`, `aria-live="polite"`). Handles 401 (errorInvalidCredentials) and 429 (errorRateLimit) distinctly. No toast, no modal, no registration link, no password-reset link. Uses `navigate('/', { replace: true })` after successful login.
+- ✅ Task 5: Created minimal placeholder stubs for `DashboardPage` and `OpsPage`.
+- ✅ Task 6: Populated `strings.ts` with 10 Uzbek Cyrillic login strings. Fixed comment to not contain flagged Latin word `mahalla`.
+- ✅ Task 7: `pnpm lint` ✓, `pnpm test` 97/97 ✓ (including check-uz-strings), `pnpm exec tsc -b apps/web/tsconfig.json` ✓.
 
 ### File List
 
-_To be filled by dev agent_
+- `apps/web/vite.config.ts` — MODIFIED: added `/api` proxy to `http://localhost:3001`
+- `apps/web/index.html` — MODIFIED: title → `Маҳалла Овози`, added Inter/Outfit Google Fonts preconnect + stylesheet, lang → `uz`
+- `apps/web/src/main.tsx` — MODIFIED: rewrote to add QueryClientProvider, ConfigProvider, BrowserRouter; imports AppRoutes from router.tsx
+- `apps/web/src/theme.ts` — NEW: mahallaTheme AntD v6 ConfigProvider token overrides
+- `apps/web/src/types.ts` — NEW: LoginSuccessResponse, LogoutSuccessResponse, ApiErrorResponse interfaces
+- `apps/web/src/strings.ts` — MODIFIED: added `login` key with 10 Uzbek Cyrillic strings
+- `apps/web/src/router.tsx` — NEW: AppRoutes component with /login, /, /ops routes
+- `apps/web/src/api/auth.ts` — NEW: login(), logout(), AuthError class
+- `apps/web/src/pages/login-page.tsx` — NEW: Login form with inline Uzbek Cyrillic error handling
+- `apps/web/src/pages/dashboard-page.tsx` — NEW: Placeholder stub for Epic 3
+- `apps/web/src/pages/ops-page.tsx` — NEW: Placeholder stub for Epic 6
+- `apps/web/src/components/auth-guard.tsx` — NEW: Route protection component
+- `apps/web/src/App.tsx` — DELETED: replaced by router.tsx + updated main.tsx
+- `apps/web/src/App.css` — DELETED: Vite scaffold artifact, not needed
 
 ## Change Log
 
 | Date | Description |
 |---|---|
 | 2026-06-13 | Story 2.4 created — Frontend Auth Flow: Login Page & Protected Route Guard |
+| 2026-06-13 | Story 2.4 implemented — all tasks complete, all ACs satisfied, lint/tests/typecheck passing |

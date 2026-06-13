@@ -64,7 +64,7 @@ development_status:
   2-1-login-and-session-issuance: done
   2-2-protected-routes-and-district-scope-enforcement: done
   2-3-logout-and-session-invalidation: done
-  2-4-frontend-auth-flow-login-page-and-protected-route-guard: ready-for-dev
+  2-4-frontend-auth-flow-login-page-and-protected-route-guard: done
   epic-2-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────────────────
