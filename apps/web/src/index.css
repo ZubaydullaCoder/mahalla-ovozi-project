@@ -45,3 +45,46 @@ body {
     text-align: center;
   }
 }
+
+/* ─── Lane Grid ─────────────────────────────────────────────────────────── */
+
+.lane-column {
+  flex: 1;
+  overflow-y: auto;
+  border-right: 1px solid #E8E5E1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lane-column:last-child {
+  border-right: none;
+}
+
+/* signal-card keyboard focus: visible 2px outline using colorPrimary tone */
+.signal-card:focus-visible {
+  outline: 2px solid #4F46A8;
+  outline-offset: 2px;
+}
+
+/* ─── Responsive Breakpoints ────────────────────────────────────────────── */
+
+/* Condensed card padding at 1024–1279px */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .signal-card {
+    padding: 10px 12px;
+  }
+}
+
+/* Standard card padding at 1280–1439px */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .signal-card {
+    padding: 12px 14px;
+  }
+}
+
+/* Wide lane min-width at ≥1440px */
+@media (min-width: 1440px) {
+  .lane-column {
+    min-width: 220px;
+  }
+}

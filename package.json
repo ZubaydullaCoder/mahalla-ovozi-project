@@ -23,6 +23,7 @@
     "@eslint/js": "^9.28.0",
     "@prisma/adapter-pg": "7.8.0",
     "@prisma/client": "7.8.0",
+    "@vitejs/plugin-react": "^6.0.2",
     "argon2": "^0.43.1",
     "dotenv": "^17.4.2",
     "eslint": "^9.28.0",
@@ -31,6 +32,7 @@
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.33.1",
+    "vite": "^8.0.16",
     "vitest": "^3.2.6"
   }
 }

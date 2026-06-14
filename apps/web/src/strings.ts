@@ -25,4 +25,19 @@ export const strings = {
     title: 'Маҳалла Овози',
     unsupportedScreen: 'Маҳалла Овози фақат компьютер экранида ишлайди',
   },
+  dashboard: {
+    lanes: {
+      hokim:       'Ҳокимга тегишли',
+      water:       'Сув',
+      electricity: 'Электр',
+      gas:         'Газ',
+      waste:       'Чиқинди',
+    },
+    emptyLane:            'Бугун сигналлар йўқ',
+    loading:              'Юкланмоқда...',
+    loadErrorTitle:       'Сигналларни юклаб бўлмади',
+    loadErrorDescription: 'Саҳифани янгилаб кўринг ёки кейинроқ қайта урининг.',
+    senderFallback:       'Резидент',
+    captionBadgeLabel:    'Расм тавсифи',
+  },
 } as const
