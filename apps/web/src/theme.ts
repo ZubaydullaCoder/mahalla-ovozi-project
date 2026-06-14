@@ -20,3 +20,13 @@ export const mahallaTheme: ThemeConfig = {
     borderRadius: 8,
   },
 }
+
+export type CategoryKey = 'hokim' | 'water' | 'electricity' | 'gas' | 'waste'
+
+export const CATEGORY_COLORS: Record<CategoryKey, string> = {
+  hokim: '#7C2D56', // Deep raspberry
+  water: '#1D6FA4', // Slate blue
+  electricity: '#B45309', // Warm amber
+  gas: '#1A7060', // Teal green
+  waste: '#5C6B2E', // Earthy olive
+} as const

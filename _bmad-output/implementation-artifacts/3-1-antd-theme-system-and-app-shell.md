@@ -1,6 +1,6 @@
 # Story 3.1: AntD Theme System & App Shell
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -36,56 +36,60 @@ So that all subsequent UI components use consistent design tokens and the struct
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Clean up `index.css` — replace Vite scaffold CSS (AC: 2, 3, 4, 5)
-  - [ ] Remove all Vite scaffold CSS variables (`:root` block with `--accent`, `--text`, dark mode, etc.)
-  - [ ] Remove `#root` width constraint (`1126px`) and centered text alignment
-  - [ ] Do not add a duplicate Google Fonts `@import` if `index.html` already has the font `<link>`
-  - [ ] Set `body` and `#root` base styles: `margin: 0`, `font-family: 'Inter', 'Outfit', sans-serif`, `background: #F5F4F2` (global CSS may use the exact theme-token hex value)
-  - [ ] Add `<1024px` CSS media query: hide `.app-shell`, show `.unsupported-screen`
-  - [ ] Ensure no dark mode CSS remains — this is a light-only dashboard
+- [x] Task 1: Clean up `index.css` — replace Vite scaffold CSS (AC: 2, 3, 4, 5)
+  - [x] Remove all Vite scaffold CSS variables (`:root` block with `--accent`, `--text`, dark mode, etc.)
+  - [x] Remove `#root` width constraint (`1126px`) and centered text alignment
+  - [x] Do not add a duplicate Google Fonts `@import` if `index.html` already has the font `<link>`
+  - [x] Set `body` and `#root` base styles: `margin: 0`, `font-family: 'Inter', 'Outfit', sans-serif`, `background: #F5F4F2` (global CSS may use the exact theme-token hex value)
+  - [x] Add `<1024px` CSS media query: hide `.app-shell`, show `.unsupported-screen`
+  - [x] Ensure no dark mode CSS remains — this is a light-only dashboard
 
-- [ ] Task 1a: Verify Google Fonts link in `index.html` (AC: 2)
-  - [ ] Keep the existing Google Fonts `<link>` approach
-  - [ ] Ensure the href includes `display=swap` and `subset=latin,latin-ext,cyrillic`
-  - [ ] Do not change title, lang, script, or other document structure
+- [x] Task 1a: Verify Google Fonts link in `index.html` (AC: 2)
+  - [x] Keep the existing Google Fonts `<link>` approach
+  - [x] Ensure the href includes `display=swap` and `subset=latin,latin-ext,cyrillic`
+  - [x] Do not change title, lang, script, or other document structure
 
-- [ ] Task 2: Expand `theme.ts` with category color tokens (AC: 1, 5)
-  - [ ] Add `CATEGORY_COLORS` constant map: `{ hokim: '#7C2D56', water: '#1D6FA4', electricity: '#B45309', gas: '#1A7060', waste: '#5C6B2E' }`
-  - [ ] Export the map as a typed `Record<CategoryKey, string>` for use by SignalCard and LaneColumn in later stories
-  - [ ] Keep existing `mahallaTheme` ConfigProvider token overrides as-is (already correct)
+- [x] Task 2: Expand `theme.ts` with category color tokens (AC: 1, 5)
+  - [x] Add `CATEGORY_COLORS` constant map: `{ hokim: '#7C2D56', water: '#1D6FA4', electricity: '#B45309', gas: '#1A7060', waste: '#5C6B2E' }`
+  - [x] Export the map as a typed `Record<CategoryKey, string>` for use by SignalCard and LaneColumn in later stories
+  - [x] Keep existing `mahallaTheme` ConfigProvider token overrides as-is (already correct)
 
-- [ ] Task 3: Create `UnsupportedScreen` component (AC: 4)
-  - [ ] Create `apps/web/src/components/unsupported-screen.tsx`
-  - [ ] Render centered Uzbek Cyrillic message from `strings.ts`
-  - [ ] Add the string to `strings.ts` under a new `dashboard` or `app` section
-  - [ ] Component is a pure CSS solution — hidden at ≥1024px, shown at <1024px via CSS class
+- [x] Task 3: Create `UnsupportedScreen` component (AC: 4)
+  - [x] Create `apps/web/src/components/unsupported-screen.tsx`
+  - [x] Render centered Uzbek Cyrillic message from `strings.ts`
+  - [x] Add the string to `strings.ts` under a new `dashboard` or `app` section
+  - [x] Component is a pure CSS solution — hidden at ≥1024px, shown at <1024px via CSS class
 
-- [ ] Task 4: Create `AppShell` layout component (AC: 3)
-  - [ ] Create `apps/web/src/components/app-shell.tsx`
-  - [ ] Layout: 56px sticky filter bar zone at top + `calc(100vh - 56px)` lane grid zone below
-  - [ ] Filter bar zone: `position: sticky; top: 0; height: 56px; z-index: 10; background: colorBgElevated; border-bottom: 1px solid colorBorder`
-  - [ ] Lane grid zone: `height: calc(100vh - 56px); overflow: hidden; background: colorBgLayout`
-  - [ ] Use `theme.useToken()` for all colors — no ad-hoc hex literals
-  - [ ] Filter bar renders placeholder content (app title from `strings.ts`)
-  - [ ] Lane grid zone renders children (placeholder for now)
+- [x] Task 4: Create `AppShell` layout component (AC: 3)
+  - [x] Create `apps/web/src/components/app-shell.tsx`
+  - [x] Layout: 56px sticky filter bar zone at top + `calc(100vh - 56px)` lane grid zone below
+  - [x] Filter bar zone: `position: sticky; top: 0; height: 56px; z-index: 10; background: colorBgElevated; border-bottom: 1px solid colorBorder`
+  - [x] Lane grid zone: `height: calc(100vh - 56px); overflow: hidden; background: colorBgLayout`
+  - [x] Use `theme.useToken()` for all colors — no ad-hoc hex literals
+  - [x] Filter bar renders placeholder content (app title from `strings.ts`)
+  - [x] Lane grid zone renders children (placeholder for now)
 
-- [ ] Task 5: Wire `DashboardPage` to use `AppShell` (AC: 3)
-  - [ ] Update `dashboard-page.tsx` to render `<AppShell>` with placeholder lane grid content
-  - [ ] Remove current inline `style={{ padding: 24 }}` placeholder
+- [x] Task 5: Wire `DashboardPage` to use `AppShell` (AC: 3)
+  - [x] Update `dashboard-page.tsx` to render `<AppShell>` with placeholder lane grid content
+  - [x] Remove current inline `style={{ padding: 24 }}` placeholder
 
-- [ ] Task 6: Update `strings.ts` with new Uzbek Cyrillic strings (AC: 4, 6)
-  - [ ] Add `app.unsupportedScreen`: `'Маҳалла Овози фақат компьютер экранида ишлайди'`
-  - [ ] Add `app.title`: `'Маҳалла Овози'` (reuse from `login.title` or add to shared section)
-  - [ ] Ensure NO Latin Uzbek strings — all Cyrillic
+- [x] Task 6: Update `strings.ts` with new Uzbek Cyrillic strings (AC: 4, 6)
+  - [x] Add `app.unsupportedScreen`: `'Маҳалла Овози фақат компьютер экранида ишлайди'`
+  - [x] Add `app.title`: `'Маҳалла Овози'` (reuse from `login.title` or add to shared section)
+  - [x] Ensure NO Latin Uzbek strings — all Cyrillic
 
-- [ ] Task 7: Clean up leftover Vite scaffold assets (AC: 5)
-  - [ ] Remove `apps/web/src/assets/react.svg` and `apps/web/src/assets/vite.svg` (unused)
-  - [ ] Keep `hero.png` only if actually referenced; remove if not
+- [x] Task 7: Clean up leftover Vite scaffold assets (AC: 5)
+  - [x] Remove `apps/web/src/assets/react.svg` and `apps/web/src/assets/vite.svg` (unused)
+  - [x] Keep `hero.png` only if actually referenced; remove if not (hero.png was not referenced — deleted)
 
-- [ ] Task 8: Verify all checks pass (AC: 6)
-  - [ ] Run `pnpm lint` — must pass
-  - [ ] Run `pnpm test` — must pass (includes `check-uz-strings.ts`)
-  - [ ] Run `pnpm exec tsc -b apps/web/tsconfig.json` — must pass (frontend type check)
+- [x] Task 8: Verify all checks pass (AC: 6)
+  - [x] Run `pnpm lint` — must pass
+  - [x] Run `pnpm test` — must pass (includes `check-uz-strings.ts`)
+  - [x] Run `pnpm exec tsc -b apps/web/tsconfig.json` — must pass (frontend type check)
+
+### Review Findings
+
+- [x] [Review][Patch] Lane grid zone is empty instead of showing placeholder text [apps/web/src/pages/dashboard-page.tsx:9]
 
 ## Dev Notes
 
@@ -341,8 +345,33 @@ pnpm exec tsc -b apps/web/tsconfig.json  # Frontend type check
 
 ### Agent Model Used
 
+Claude Sonnet 4.6 (Thinking)
+
 ### Debug Log References
+
+None — clean implementation, all checks passed first run.
 
 ### Completion Notes List
 
+- ✅ Task 1: Replaced entire Vite scaffold `index.css` with minimal app-shell styles. Removed all CSS variables, dark mode, fixed root width. Added `color-scheme: light`, `font-family: 'Inter', 'Outfit', sans-serif`, and `<1024px` media query for unsupported screen.
+- ✅ Task 1a: Added `latin-ext` to existing Google Fonts `<link>` href in `index.html`. No duplicate `@import` added.
+- ✅ Task 2: Added `CategoryKey` type and `CATEGORY_COLORS` typed constant map to `theme.ts`. Existing `mahallaTheme` unchanged.
+- ✅ Task 3: Created `apps/web/src/components/unsupported-screen.tsx` — pure CSS show/hide, always in DOM, no JS viewport detection.
+- ✅ Task 4: Created `apps/web/src/components/app-shell.tsx` — 56px sticky filter bar + calc(100vh-56px) lane grid, all colors via `theme.useToken()`, accepts `filterBar` slot and `children`.
+- ✅ Task 5: Rewrote `dashboard-page.tsx` to render `<AppShell>` + `<UnsupportedScreen>` with placeholder lane grid content.
+- ✅ Task 6: Added `app.title` and `app.unsupportedScreen` strings to `strings.ts` in Uzbek Cyrillic. All comments in English (no Latin Uzbek).
+- ✅ Task 7: Deleted `react.svg`, `vite.svg`, and `hero.png` (hero.png verified not referenced in source).
+- ✅ Task 8: `pnpm lint` clean, `pnpm test` 97/97 passed (including `check-uz-strings`), `pnpm exec tsc -b apps/web/tsconfig.json` clean.
+
 ### File List
+
+- `apps/web/src/index.css` — MODIFIED: replaced Vite scaffold with app-shell styles
+- `apps/web/index.html` — MODIFIED: added `latin-ext` to Google Fonts subset
+- `apps/web/src/theme.ts` — MODIFIED: added `CategoryKey` type and `CATEGORY_COLORS` constant
+- `apps/web/src/strings.ts` — MODIFIED: added `app.title` and `app.unsupportedScreen`
+- `apps/web/src/pages/dashboard-page.tsx` — MODIFIED: wired to AppShell + UnsupportedScreen
+- `apps/web/src/components/app-shell.tsx` — NEW: layout container with filter bar zone and lane grid zone
+- `apps/web/src/components/unsupported-screen.tsx` — NEW: CSS-only unsupported screen message
+- `apps/web/src/assets/react.svg` — DELETED: unused Vite scaffold
+- `apps/web/src/assets/vite.svg` — DELETED: unused Vite scaffold
+- `apps/web/src/assets/hero.png` — DELETED: unreferenced

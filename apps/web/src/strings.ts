@@ -21,4 +21,8 @@ export const strings = {
     dashboardPlaceholder: 'Бошқарув панели тайёрланмоқда',
     opsPlaceholder: 'Оператор панели тайёрланмоқда',
   },
+  app: {
+    title: 'Маҳалла Овози',
+    unsupportedScreen: 'Маҳалла Овози фақат компьютер экранида ишлайди',
+  },
 } as const
